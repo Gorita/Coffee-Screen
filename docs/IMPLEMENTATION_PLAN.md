@@ -150,12 +150,13 @@ class KioskEnforcer {
 ```
 
 #### 2.3 단위 테스트 작성
-- [ ] PowerControllerTests
-- [ ] KioskEnforcerTests
+- [x] PowerControllerTests (7개 테스트)
+- [x] KioskEnforcerTests (7개 테스트)
 
 ### 완료 기준
-- [ ] PowerController가 시스템 수면을 방지함 (Activity Monitor에서 확인)
-- [ ] KioskEnforcer가 Cmd+Tab, Cmd+Opt+Esc를 차단함
+- [x] PowerController가 시스템 수면을 방지함 (IOKit Power Assertion)
+- [x] KioskEnforcer가 Cmd+Tab, Cmd+Opt+Esc를 차단함 (NSApplication.PresentationOptions)
+- [x] MainViewModel에 Controller 통합 완료
 
 ---
 
