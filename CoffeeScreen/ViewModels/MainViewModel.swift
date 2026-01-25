@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import SwiftUI
 
@@ -19,6 +20,9 @@ final class MainViewModel: ObservableObject {
         let viewModel = ShieldViewModel()
         viewModel.onUnlockSuccess = { [weak self] in
             self?.stopLock()
+        }
+        viewModel.onAuthAttemptCompleted = { [weak self] in
+            self?.reactivateKiosk()
         }
         return viewModel
     }()
@@ -73,7 +77,7 @@ final class MainViewModel: ObservableObject {
         appState.isLocked = false
         appState.isAwake = false
         appState.lastError = nil
-        shieldViewModel.clearError()
+        shieldViewModel.resetAll()
     }
 
     // MARK: - State Accessors
@@ -94,5 +98,19 @@ final class MainViewModel: ObservableObject {
             guard let self, self.appState.isLocked else { return }
             self.stopLock()
         }
+    }
+
+    /// 키오스크 모드 재활성화 (Touch ID 인증 후)
+    private func reactivateKiosk() {
+        guard appState.isLocked else { return }
+
+        // 앱을 최상위로 강제 활성화
+        NSApp.activate(ignoringOtherApps: true)
+
+        // Shield 윈도우를 최상위로
+        shieldWindowController.bringToFront()
+
+        // 인증 상태 리셋 (Touch ID 다시 사용 가능하도록)
+        shieldViewModel.resetAuthState()
     }
 }

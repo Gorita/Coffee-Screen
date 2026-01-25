@@ -64,6 +64,15 @@ final class ShieldWindowController {
         currentViewModel = nil
     }
 
+    /// 모든 Shield 윈도우를 최상위로 가져오기
+    func bringToFront() {
+        shieldWindows.forEach { window in
+            window.orderFrontRegardless()
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+
     // MARK: - Private Methods
 
     /// 특정 화면에 대한 Shield 윈도우 생성

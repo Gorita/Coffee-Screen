@@ -3,6 +3,7 @@ import SwiftUI
 /// 메인 설정 화면
 struct MainView: View {
     @EnvironmentObject var viewModel: MainViewModel
+    @StateObject private var pinSettingsViewModel = PINSettingsViewModel()
 
     var body: some View {
         VStack(spacing: 24) {
@@ -39,6 +40,69 @@ struct MainView: View {
                 .padding(.vertical, 4)
             }
 
+            // PIN 설정 섹션
+            GroupBox {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Label(String(localized: "pin.settings"), systemImage: "number")
+                            .font(.headline)
+                        Spacer()
+                        if pinSettingsViewModel.isPINSet {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(.green)
+                        }
+                    }
+
+                    if pinSettingsViewModel.isPINSet {
+                        // PIN이 설정된 경우 - 변경/삭제 옵션
+                        HStack(spacing: 8) {
+                            Button(String(localized: "pin.change")) {
+                                pinSettingsViewModel.showChangePIN()
+                            }
+                            .buttonStyle(.bordered)
+
+                            Button(String(localized: "pin.delete")) {
+                                pinSettingsViewModel.deletePIN()
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(.red)
+                        }
+                    } else {
+                        // PIN 설정 안 된 경우 - 설정 필드
+                        VStack(spacing: 8) {
+                            SecureField(String(localized: "pin.enter"), text: $pinSettingsViewModel.newPIN)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(maxWidth: .infinity)
+
+                            SecureField(String(localized: "pin.confirmInput"), text: $pinSettingsViewModel.confirmPIN)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(maxWidth: .infinity)
+
+                            Button(String(localized: "pin.set")) {
+                                pinSettingsViewModel.setPIN()
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .disabled(!pinSettingsViewModel.canSetPIN)
+                        }
+                    }
+
+                    // 에러 메시지
+                    if let error = pinSettingsViewModel.errorMessage {
+                        Text(error)
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
+
+                    // 성공 메시지
+                    if let success = pinSettingsViewModel.successMessage {
+                        Text(success)
+                            .font(.caption)
+                            .foregroundStyle(.green)
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+
             // 잠금 버튼
             Button(action: {
                 viewModel.startLock()
@@ -61,7 +125,7 @@ struct MainView: View {
             }
         }
         .padding(24)
-        .frame(minWidth: 300, minHeight: 250)
+        .frame(minWidth: 300, minHeight: 300)
     }
 }
 

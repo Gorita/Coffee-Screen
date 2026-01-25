@@ -46,15 +46,15 @@ final class AuthManager: @unchecked Sendable {
         return context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error)
     }
 
-    /// 인증 수행
+    /// Touch ID 전용 인증 수행 (비밀번호 폴백 없음)
     /// - Parameter reason: 인증 요청 이유 (사용자에게 표시)
     /// - Returns: 인증 결과 (성공 시 true, 실패 시 AuthError)
     func authenticate(reason: String) async -> Result<Bool, AuthError> {
         let context = contextFactory()
         var error: NSError?
 
-        // 인증 가능 여부 확인
-        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
+        // Touch ID 사용 가능 여부 확인 (비밀번호 폴백 없이)
+        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
             return .failure(.notAvailable)
         }
 
@@ -62,8 +62,9 @@ final class AuthManager: @unchecked Sendable {
         let authReason = reason.isEmpty ? Constants.Strings.unlockReason : reason
 
         do {
+            // Touch ID만 사용 (deviceOwnerAuthenticationWithBiometrics)
             let success = try await context.evaluatePolicy(
-                .deviceOwnerAuthentication,
+                .deviceOwnerAuthenticationWithBiometrics,
                 localizedReason: authReason
             )
             return .success(success)
@@ -72,6 +73,13 @@ final class AuthManager: @unchecked Sendable {
         } catch {
             return .failure(.failed(error.localizedDescription))
         }
+    }
+
+    /// Touch ID 사용 가능 여부 확인
+    func isBiometricAvailable() -> Bool {
+        let context = contextFactory()
+        var error: NSError?
+        return context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
     }
 
     // MARK: - Private Methods
