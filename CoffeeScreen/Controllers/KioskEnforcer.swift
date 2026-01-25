@@ -43,8 +43,8 @@ final class KioskEnforcer {
         // 앱을 최상위로 강제 활성화
         NSApp.activate(ignoringOtherApps: true)
 
-        // 마우스 커서 숨김
-        NSCursor.hide()
+        // 참고: 마우스 커서는 숨기지 않음
+        // 사용자가 잠금 해제 버튼을 클릭해야 하므로 커서가 필요함
 
         isLocked = true
     }
@@ -55,9 +55,6 @@ final class KioskEnforcer {
 
         // 이전 옵션으로 복구
         NSApp.presentationOptions = previousOptions
-
-        // 마우스 커서 표시
-        NSCursor.unhide()
 
         isLocked = false
     }
