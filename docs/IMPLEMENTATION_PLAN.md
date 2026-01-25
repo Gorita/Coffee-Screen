@@ -299,9 +299,12 @@ func setupEmergencyEscape(onEscape: @escaping () -> Void) {
 ```
 
 ### 완료 기준
-- [ ] Touch ID 인증이 작동함
-- [ ] Touch ID 실패 시 비밀번호 입력으로 폴백
-- [ ] 비상 탈출 키가 작동함
+- [x] Touch ID 인증이 작동함 (AuthManager + LAContext)
+- [x] Touch ID 실패 시 비밀번호 입력으로 폴백 (deviceOwnerAuthentication 정책)
+- [x] 비상 탈출 키가 작동함 (EmergencyEscapeHandler: 양쪽 Shift + Cmd + L)
+- [x] AuthManager 테스트 (7개)
+- [x] EmergencyEscapeHandler 테스트 (12개)
+- [x] ShieldViewModel 통합 테스트 (12개)
 
 ---
 

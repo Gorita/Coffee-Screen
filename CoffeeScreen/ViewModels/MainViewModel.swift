@@ -11,6 +11,7 @@ final class MainViewModel: ObservableObject {
     private let powerController = PowerController()
     private let kioskEnforcer = KioskEnforcer()
     private let shieldWindowController = ShieldWindowController()
+    private let emergencyEscapeHandler = EmergencyEscapeHandler()
 
     // MARK: - ViewModels
 
@@ -21,6 +22,12 @@ final class MainViewModel: ObservableObject {
         }
         return viewModel
     }()
+
+    // MARK: - Initialization
+
+    init() {
+        setupEmergencyEscape()
+    }
 
     // MARK: - Public Methods
 
@@ -41,12 +48,18 @@ final class MainViewModel: ObservableObject {
         // Shield 윈도우 표시
         shieldWindowController.showShields(with: shieldViewModel)
 
+        // 비상 탈출 키 모니터링 시작
+        emergencyEscapeHandler.start()
+
         appState.isLocked = true
         appState.connectedScreens = shieldWindowController.shieldCount
     }
 
     /// 화면 잠금 해제
     func stopLock() {
+        // 비상 탈출 키 모니터링 중지
+        emergencyEscapeHandler.stop()
+
         // Shield 윈도우 숨김
         shieldWindowController.hideShields()
 
@@ -71,5 +84,15 @@ final class MainViewModel: ObservableObject {
 
     var isAwake: Bool {
         appState.isAwake
+    }
+
+    // MARK: - Private Methods
+
+    /// 비상 탈출 핸들러 설정
+    private func setupEmergencyEscape() {
+        emergencyEscapeHandler.onEscape = { [weak self] in
+            guard let self, self.appState.isLocked else { return }
+            self.stopLock()
+        }
     }
 }

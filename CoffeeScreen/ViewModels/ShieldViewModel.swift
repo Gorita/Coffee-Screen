@@ -18,13 +18,45 @@ final class ShieldViewModel: ObservableObject {
     /// 잠금 해제 성공 시 호출되는 콜백
     var onUnlockSuccess: (() -> Void)?
 
+    // MARK: - Dependencies
+
+    private let authManager: AuthManager
+
+    // MARK: - Initialization
+
+    init(authManager: AuthManager = AuthManager()) {
+        self.authManager = authManager
+    }
+
     // MARK: - Public Methods
 
     /// 잠금 해제 시도
-    /// Phase 4에서 AuthManager와 연동
     func attemptUnlock() {
-        // TODO: Phase 4에서 구현
+        guard !isAuthenticating else { return }
+
         isAuthenticating = true
+        authError = nil
+
+        Task {
+            let result = await authManager.authenticate(reason: Constants.Strings.unlockReason)
+
+            isAuthenticating = false
+
+            switch result {
+            case .success(true):
+                onUnlockSuccess?()
+
+            case .success(false):
+                authError = Constants.Strings.authFailed
+
+            case .failure(let error):
+                // 취소는 에러 표시 안 함
+                if case .cancelled = error {
+                    return
+                }
+                authError = error.localizedDescription
+            }
+        }
     }
 
     /// 에러 메시지 초기화

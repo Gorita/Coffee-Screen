@@ -119,6 +119,40 @@
           }
         }
       }
+    },
+    "error.auth.cancelled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authentication cancelled"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인증이 취소되었습니다"
+          }
+        }
+      }
+    },
+    "error.auth.notAvailable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authentication not available"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인증을 사용할 수 없습니다"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
