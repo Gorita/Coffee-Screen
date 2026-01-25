@@ -39,11 +39,11 @@ Xcode 프로젝트 생성 및 기본 폴더 구조 설정
 ### 작업 항목
 
 #### 1.1 Xcode 프로젝트 생성
-- [ ] 새 macOS App 프로젝트 생성
-- [ ] Bundle Identifier: `com.yourcompany.coffee-screen`
-- [ ] Deployment Target: macOS 14.0
-- [ ] Interface: SwiftUI
-- [ ] Language: Swift
+- [x] 새 macOS App 프로젝트 생성 (XcodeGen 사용)
+- [x] Bundle Identifier: `com.gorita.coffee-screen`
+- [x] Deployment Target: macOS 14.0
+- [x] Interface: SwiftUI
+- [x] Language: Swift
 
 #### 1.2 폴더 구조 생성
 ```
@@ -57,13 +57,14 @@ CoffeeScreen/
 ├── Utilities/
 └── Resources/
 ```
+- [x] 완료
 
 #### 1.3 기본 설정
-- [ ] Info.plist 설정
+- [x] Info.plist 설정
   - LSUIElement: NO (Dock에 표시)
   - NSPrincipalClass: NSApplication
-- [ ] Localizable.xcstrings 생성 (한국어, 영어)
-- [ ] Assets.xcassets 앱 아이콘 추가
+- [x] Localizable.xcstrings 생성 (한국어, 영어)
+- [x] Assets.xcassets 앱 아이콘 구조 추가
 
 #### 1.4 Constants 정의
 ```swift
