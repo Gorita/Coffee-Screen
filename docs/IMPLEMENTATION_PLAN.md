@@ -228,9 +228,12 @@ NotificationCenter.default.addObserver(
 ```
 
 ### 완료 기준
-- [ ] 모든 모니터가 검은 화면으로 덮임
-- [ ] 다른 윈도우가 Shield 위에 표시되지 않음
-- [ ] 모니터 연결/해제 시 Shield가 동적으로 대응
+- [x] 모든 모니터가 검은 화면으로 덮임 (ShieldWindow, screenSaverWindow+1 레벨)
+- [x] 다른 윈도우가 Shield 위에 표시되지 않음 (canJoinAllSpaces)
+- [x] 모니터 연결/해제 시 Shield가 동적으로 대응 (didChangeScreenParametersNotification)
+- [x] ShieldView, UnlockView UI 구현
+- [x] ShieldViewModel 구현
+- [x] MainViewModel에 ShieldWindowController 통합
 
 ---
 

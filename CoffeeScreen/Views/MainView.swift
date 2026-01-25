@@ -65,7 +65,9 @@ struct MainView: View {
     }
 }
 
-#Preview {
-    MainView()
-        .environmentObject(MainViewModel())
+struct MainView_Previews: PreviewProvider {
+    static var previews: some View {
+        MainView()
+            .environmentObject(MainViewModel())
+    }
 }

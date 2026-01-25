@@ -10,6 +10,17 @@ final class MainViewModel: ObservableObject {
 
     private let powerController = PowerController()
     private let kioskEnforcer = KioskEnforcer()
+    private let shieldWindowController = ShieldWindowController()
+
+    // MARK: - ViewModels
+
+    private(set) lazy var shieldViewModel: ShieldViewModel = {
+        let viewModel = ShieldViewModel()
+        viewModel.onUnlockSuccess = { [weak self] in
+            self?.stopLock()
+        }
+        return viewModel
+    }()
 
     // MARK: - Public Methods
 
@@ -26,21 +37,30 @@ final class MainViewModel: ObservableObject {
 
         // 키오스크 모드 활성화
         kioskEnforcer.lockUI()
-        appState.isLocked = kioskEnforcer.isLocked
+
+        // Shield 윈도우 표시
+        shieldWindowController.showShields(with: shieldViewModel)
+
+        appState.isLocked = true
+        appState.connectedScreens = shieldWindowController.shieldCount
     }
 
     /// 화면 잠금 해제
     func stopLock() {
+        // Shield 윈도우 숨김
+        shieldWindowController.hideShields()
+
         // 키오스크 모드 해제
         kioskEnforcer.unlockUI()
-        appState.isLocked = false
 
         // 시스템 수면 방지 해제
         powerController.stopAwake()
-        appState.isAwake = false
 
-        // 에러 상태 초기화
+        // 상태 초기화
+        appState.isLocked = false
+        appState.isAwake = false
         appState.lastError = nil
+        shieldViewModel.clearError()
     }
 
     // MARK: - State Accessors
