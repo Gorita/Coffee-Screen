@@ -301,10 +301,14 @@ func setupEmergencyEscape(onEscape: @escaping () -> Void) {
 ### 완료 기준
 - [x] Touch ID 인증이 작동함 (AuthManager + LAContext)
 - [x] Touch ID 실패 시 비밀번호 입력으로 폴백 (deviceOwnerAuthentication 정책)
-- [x] 비상 탈출 키가 작동함 (EmergencyEscapeHandler: 양쪽 Shift + Cmd + L)
+- [x] 비상 탈출 키가 작동함 (EmergencyEscapeHandler)
+- [x] 비상 탈출 키 설정 가능 (KeyCombinationManager, 기본값: 양쪽 Shift + Cmd + L)
+- [x] PIN 기반 잠금 해제 지원 (PINManager)
 - [x] AuthManager 테스트 (7개)
 - [x] EmergencyEscapeHandler 테스트 (12개)
 - [x] ShieldViewModel 통합 테스트 (12개)
+- [x] KeyCombinationTests (18개)
+- [x] KeyCombinationManagerTests (9개)
 
 ---
 
@@ -417,7 +421,7 @@ struct UnlockView: View {
 
 ### 작업 항목
 
-#### 6.1 Unit Tests (55개)
+#### 6.1 Unit Tests (82개)
 - [x] PowerControllerTests (7개)
 - [x] KioskEnforcerTests (7개)
 - [x] AuthManagerTests (3개)
@@ -427,7 +431,9 @@ struct UnlockView: View {
 - [x] ShieldViewModelWithMockTests (3개)
 - [x] ShieldWindowControllerTests (3개)
 - [x] ShieldWindowTests (4개)
-- [x] CoffeeScreenTests/MainViewModelTests (3개)
+- [x] MainViewModelTests (3개)
+- [x] KeyCombinationTests (18개)
+- [x] KeyCombinationManagerTests (9개)
 
 #### 6.2 UI Tests (7개)
 - [x] MainView 표시 테스트
@@ -447,8 +453,11 @@ struct UnlockView: View {
 - [ ] Clamshell 모드 테스트
 - [ ] 전체 잠금/해제 플로우 테스트
 - [ ] Touch ID 인증 테스트
+- [ ] PIN 인증 테스트
 - [ ] 비밀번호 폴백 테스트
-- [ ] 비상 탈출 키 (양쪽 Shift + Cmd + L) 테스트
+- [ ] 비상 탈출 키 테스트 (기본값: 양쪽 Shift + Cmd + L)
+- [ ] 비상 탈출 키 변경 및 저장 테스트
+- [ ] 상태바 메뉴 테스트 (PIN 미설정 시 잠금 비활성화)
 
 #### 6.4 엣지 케이스 (수동 테스트)
 - [ ] Touch ID 5회 연속 실패 → 비밀번호 입력
@@ -456,7 +465,7 @@ struct UnlockView: View {
 - [ ] 잠금 중 앱 강제 종료 시도 → Kiosk Mode가 차단
 
 ### 완료 기준
-- [x] Unit Test 62개 통과
+- [x] Unit Test 82개 통과
 - [x] 모든 자동화 테스트 통과
 - [ ] 수동 테스트 완료
 - [ ] 알려진 버그 없음

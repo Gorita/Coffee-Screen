@@ -39,10 +39,13 @@ SwiftUI와의 자연스러운 통합과 테스트 용이성을 위해 이 패턴
 │  │   Power     │ │   Kiosk     │ │   ShieldWindow       │     │
 │  │ Controller  │ │  Enforcer   │ │    Controller        │     │
 │  └─────────────┘ └─────────────┘ └──────────────────────┘     │
-│  ┌─────────────┐ ┌─────────────────────────────────────────┐  │
-│  │    Auth     │ │         NotificationService             │  │
-│  │   Manager   │ └─────────────────────────────────────────┘  │
-│  └─────────────┘                                               │
+│  ┌─────────────┐ ┌─────────────┐ ┌──────────────────────┐     │
+│  │    Auth     │ │    PIN      │ │  KeyCombination      │     │
+│  │   Manager   │ │   Manager   │ │     Manager          │     │
+│  └─────────────┘ └─────────────┘ └──────────────────────┘     │
+│  ┌─────────────────────┐ ┌─────────────────────────────────┐  │
+│  │  StatusBarController│ │         NotificationService     │  │
+│  └─────────────────────┘ └─────────────────────────────────┘  │
 └────────────────────────────────────────────────────────────────┘
 ```
 
@@ -207,6 +210,58 @@ enum AuthError: Error {
     case cancelled
     case failed(String)
     case notAvailable
+}
+```
+
+### PINManager
+
+```swift
+final class PINManager {
+    static let shared: PINManager
+
+    /// PIN 설정 여부
+    var isPINSet: Bool
+
+    /// PIN 설정 (4-8자리 숫자)
+    func setPIN(_ pin: String) -> Bool
+
+    /// PIN 검증
+    func verifyPIN(_ pin: String) -> Bool
+
+    /// PIN 삭제
+    func deletePIN() -> Bool
+}
+```
+
+### KeyCombinationManager
+
+```swift
+final class KeyCombinationManager {
+    static let shared: KeyCombinationManager
+
+    /// 현재 설정된 비상 탈출 키 조합
+    var currentKeyCombination: KeyCombination
+
+    /// 커스텀 키 설정
+    func setKeyCombination(_ combination: KeyCombination) -> Bool
+
+    /// 기본값으로 복원
+    func resetToDefault()
+}
+```
+
+### StatusBarController
+
+```swift
+final class StatusBarController: NSObject, NSMenuDelegate {
+    /// 상태 업데이트 (잠금 상태, PIN 설정 여부)
+    func updateStatus(isLocked: Bool, isPINSet: Bool)
+
+    /// 잠금/해제 토글 콜백
+    var onLockToggle: (() -> Void)?
+
+    /// PIN 설정 화면 열기 콜백
+    var onOpenPINSettings: (() -> Void)?
 }
 ```
 
@@ -377,15 +432,18 @@ enum AppError: Error {
 
 ## 비상 탈출 메커니즘
 
-### 숨겨진 단축키
+### 사용자 설정 가능한 단축키
+
+비상 탈출 키는 사용자가 설정할 수 있으며, 기본값은 "양쪽 Shift + Cmd + L"입니다.
 
 ```swift
-// 양쪽 Shift + Cmd + L
-// 키 조합 감지 시 즉시 잠금 해제
+// KeyCombinationManager가 현재 설정된 키 조합을 관리
+// KeyCombination 모델이 키 조합 데이터를 저장
 
 func setupEmergencyEscape() {
     NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-        if isEmergencyKeyCombo(event) {
+        let currentCombination = KeyCombinationManager.shared.currentKeyCombination
+        if isEmergencyKeyCombo(event, combination: currentCombination) {
             emergencyUnlock()
             return nil
         }
@@ -393,6 +451,11 @@ func setupEmergencyEscape() {
     }
 }
 ```
+
+### 키 조합 요구사항
+- 최소 Cmd 또는 Ctrl 키 포함 필수 (실수로 트리거 방지)
+- 양쪽 Shift 키 동시 누름 지원
+- UserDefaults에 설정 저장
 
 ### 타임아웃
 

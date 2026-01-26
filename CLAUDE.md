@@ -30,21 +30,29 @@ AI 학습, 대용량 렌더링 등 장시간 작업 시 시스템 수면을 방�
 Coffee-Screen/
 ├── CoffeeScreen/
 │   ├── App/
-│   │   └── CoffeeScreenApp.swift      # 앱 진입점
+│   │   └── CoffeeScreenApp.swift      # 앱 진입점, AppDelegate
 │   ├── Models/
-│   │   └── AppState.swift             # 앱 상태 모델
+│   │   ├── AppState.swift             # 앱 상태 모델
+│   │   └── KeyCombination.swift       # 키 조합 모델 (Codable)
 │   ├── ViewModels/
 │   │   ├── MainViewModel.swift        # 메인 뷰모델
-│   │   └── ShieldViewModel.swift      # 쉴드 뷰모델
+│   │   ├── ShieldViewModel.swift      # 쉴드 뷰모델
+│   │   ├── PINSettingsViewModel.swift # PIN 설정 뷰모델
+│   │   └── KeyCombinationSettingsViewModel.swift # 비상 탈출 키 설정 뷰모델
 │   ├── Views/
 │   │   ├── MainView.swift             # 메인 설정 화면
 │   │   ├── ShieldView.swift           # 화면 가림 뷰
-│   │   └── UnlockView.swift           # 잠금 해제 뷰
+│   │   ├── UnlockView.swift           # 잠금 해제 뷰
+│   │   └── KeyRecorderView.swift      # 키 녹화 뷰 (NSViewRepresentable)
 │   ├── Controllers/
 │   │   ├── PowerController.swift      # IOKit 전원 관리
 │   │   ├── KioskEnforcer.swift        # 키오스크 모드 제어
 │   │   ├── ShieldWindowController.swift # 다중 모니터 윈도우 관리
-│   │   └── AuthManager.swift          # LocalAuthentication 처리
+│   │   ├── AuthManager.swift          # LocalAuthentication 처리
+│   │   ├── PINManager.swift           # PIN 저장/검증 (UserDefaults)
+│   │   ├── KeyCombinationManager.swift # 비상 탈출 키 저장/로드
+│   │   ├── EmergencyEscapeHandler.swift # 비상 탈출 키 모니터링
+│   │   └── StatusBarController.swift  # 메뉴바 상태 아이콘
 │   ├── Services/
 │   │   └── NotificationService.swift  # 알림 서비스
 │   ├── Utilities/
@@ -112,7 +120,7 @@ xcodebuild test -scheme CoffeeScreen
 
 - **하드웨어 전원 버튼 강제 종료는 막을 수 없음** (하드웨어 레벨 인터럽트)
 - **Clamshell Mode**: 전원 미연결 시 덮개 닫으면 절전 진입 가능
-- **비상 탈출**: 숨겨진 단축키(Shift+Shift+Cmd+L) 구현 필요
+- **비상 탈출**: 기본 Shift+Shift+Cmd+L, 설정에서 변경 가능 (Cmd 또는 Ctrl 필수)
 - **기업 환경**: CGEventTap 사용 금지 (보안 프로그램 충돌)
 
 ## 관련 문서
