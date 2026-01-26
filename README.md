@@ -1,5 +1,9 @@
 # Coffee-Screen
 
+<p align="center">
+  <img src="coffee-screen.png" alt="Coffee-Screen" width="600">
+</p>
+
 > macOS용 장기 실행 프로세스 보장 및 화면 보안 애플리케이션
 
 ## 소개
@@ -23,11 +27,11 @@ Coffee-Screen은 AI 학습, 대용량 데이터 렌더링 등 장시간 작업�
 ## 설치
 
 ### Direct Download
-[Releases](https://github.com/your-repo/coffee-screen/releases) 페이지에서 최신 버전을 다운로드하세요.
+[Releases](https://github.com/Gorita/Coffee-Screen/releases) 페이지에서 최신 버전을 다운로드하세요.
 
 ### 빌드
 ```bash
-git clone https://github.com/your-repo/coffee-screen.git
+git clone https://github.com/Gorita/Coffee-Screen.git
 cd coffee-screen
 open CoffeeScreen.xcodeproj
 ```
