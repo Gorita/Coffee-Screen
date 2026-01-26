@@ -36,9 +36,6 @@ final class ShieldViewModel: ObservableObject {
     /// 잠금 해제 성공 시 호출되는 콜백
     var onUnlockSuccess: (() -> Void)?
 
-    /// 인증 시도 완료 시 호출되는 콜백 (성공/실패 무관, 앱 재활성화용)
-    var onAuthAttemptCompleted: (() -> Void)?
-
     // MARK: - Dependencies
 
     private let authManager: AuthManager
@@ -77,9 +74,6 @@ final class ShieldViewModel: ObservableObject {
             let result = await authManager.authenticate(reason: Constants.Strings.unlockReason)
 
             isAuthenticating = false
-
-            // 인증 완료 후 앱 재활성화 (성공/실패 무관)
-            onAuthAttemptCompleted?()
 
             switch result {
             case .success(true):
@@ -138,17 +132,6 @@ final class ShieldViewModel: ObservableObject {
         showPINInput = false
         pinInput = ""
         authError = nil
-    }
-
-    /// 인증 상태 리셋 (앱 재활성화 시 호출)
-    func resetAuthState() {
-        // 인증 중이 아니고, Touch ID가 사용 가능하고, 아직 시도하지 않았으면 Touch ID 모드로 리셋
-        if !isAuthenticating && isBiometricAvailable && !hasTouchIDBeenAttempted {
-            authMode = .touchID
-            showPINInput = false
-            pinInput = ""
-            authError = nil
-        }
     }
 
     /// 에러 메시지 초기화
