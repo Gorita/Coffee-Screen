@@ -4,18 +4,40 @@ import SwiftUI
 struct MainView: View {
     @EnvironmentObject var viewModel: MainViewModel
     @StateObject private var pinSettingsViewModel = PINSettingsViewModel()
+    @StateObject private var keyCombinationViewModel = KeyCombinationSettingsViewModel()
+    @State private var showEscapeKeyPopover = false
 
     var body: some View {
         VStack(spacing: 24) {
             // 앱 아이콘 및 제목
-            VStack(spacing: 8) {
-                Image(systemName: "cup.and.saucer.fill")
-                    .font(.system(size: 48))
-                    .foregroundStyle(.brown)
+            HStack {
+                Spacer()
+                VStack(spacing: 8) {
+                    Image(systemName: "cup.and.saucer.fill")
+                        .font(.system(size: 48))
+                        .foregroundStyle(.brown)
 
-                Text(Constants.appName)
-                    .font(.title)
-                    .fontWeight(.bold)
+                    Text(Constants.appName)
+                        .font(.title)
+                        .fontWeight(.bold)
+                }
+                Spacer()
+
+                // 비상 탈출 키 설정 버튼 (PIN 설정 시에만 표시)
+                if pinSettingsViewModel.isPINSet {
+                    Button {
+                        showEscapeKeyPopover.toggle()
+                    } label: {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.system(size: 16))
+                            .foregroundStyle(.orange)
+                    }
+                    .buttonStyle(.plain)
+                    .help(String(localized: "key.settings"))
+                    .popover(isPresented: $showEscapeKeyPopover, arrowEdge: .bottom) {
+                        EscapeKeyPopoverView(viewModel: keyCombinationViewModel)
+                    }
+                }
             }
 
             // PIN 설정 섹션
@@ -237,5 +259,32 @@ struct PINEntryView: View {
         inputText = ""
         viewModel.errorMessage = nil
         isFocused = true
+    }
+}
+
+// MARK: - 비상 탈출 키 팝오버 뷰
+
+struct EscapeKeyPopoverView: View {
+    @ObservedObject var viewModel: KeyCombinationSettingsViewModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // 제목
+            Label(String(localized: "key.settings"), systemImage: "keyboard")
+                .font(.headline)
+
+            // 안내 문구
+            Text("key.info.description")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Divider()
+
+            // 키 설정 뷰
+            KeyRecorderView(viewModel: viewModel)
+        }
+        .padding(16)
+        .frame(width: 300)
     }
 }

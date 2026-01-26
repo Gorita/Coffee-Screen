@@ -2,14 +2,11 @@ import AppKit
 import Carbon.HIToolbox
 
 /// 비상 탈출 키 조합 핸들러
-/// 양쪽 Shift + Cmd + L 키 조합을 감지하여 긴급 잠금 해제
+/// 설정된 키 조합을 감지하여 긴급 잠금 해제
 @MainActor
 final class EmergencyEscapeHandler {
 
     // MARK: - Constants
-
-    /// L 키 코드
-    private static let lKeyCode: UInt16 = 0x25 // 37
 
     /// Left Shift 키 코드
     private static let leftShiftKeyCode: UInt16 = 56
@@ -32,7 +29,14 @@ final class EmergencyEscapeHandler {
     private var leftShiftPressed: Bool = false
     private var rightShiftPressed: Bool = false
 
+    /// 키 조합 관리자
+    private let keyCombinationManager: KeyCombinationManager
+
     // MARK: - Lifecycle
+
+    init(keyCombinationManager: KeyCombinationManager = .shared) {
+        self.keyCombinationManager = keyCombinationManager
+    }
 
     deinit {
         // deinit에서는 MainActor가 아니므로 monitor 제거만 수행
@@ -79,11 +83,26 @@ final class EmergencyEscapeHandler {
         modifierFlags: NSEvent.ModifierFlags,
         bothShiftsPressed: Bool
     ) -> Bool {
-        // Cmd + L 키이고, 양쪽 Shift가 모두 눌린 상태
-        return keyCode == Self.lKeyCode &&
-               modifierFlags.contains(.command) &&
-               modifierFlags.contains(.shift) &&
-               bothShiftsPressed
+        let configured = keyCombinationManager.currentKeyCombination
+
+        // 키 코드 일치 확인
+        guard keyCode == configured.keyCode else { return false }
+
+        // 수정자 키 확인 (Shift 제외, 별도 처리)
+        let requiredModifiers = configured.modifierFlags.intersection([.command, .control, .option])
+        let eventModifiers = modifierFlags.intersection([.command, .control, .option])
+        guard eventModifiers.contains(requiredModifiers) else { return false }
+
+        // Shift 키 확인
+        if configured.requiresBothShifts {
+            // 양쪽 Shift 필요
+            guard modifierFlags.contains(.shift) && bothShiftsPressed else { return false }
+        } else if configured.modifierFlags.contains(.shift) {
+            // 단일 Shift 필요
+            guard modifierFlags.contains(.shift) else { return false }
+        }
+
+        return true
     }
 
     // MARK: - Private Methods
