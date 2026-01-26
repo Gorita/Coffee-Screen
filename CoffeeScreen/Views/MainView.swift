@@ -4,6 +4,12 @@ import SwiftUI
 struct MainView: View {
     @EnvironmentObject var viewModel: MainViewModel
     @StateObject private var pinSettingsViewModel = PINSettingsViewModel()
+    @FocusState private var focusedField: FocusField?
+
+    enum FocusField {
+        case newPIN
+        case confirmPIN
+    }
 
     var body: some View {
         VStack(spacing: 24) {
@@ -60,12 +66,14 @@ struct MainView: View {
                                 pinSettingsViewModel.showChangePIN()
                             }
                             .buttonStyle(.bordered)
+                            .focusEffectDisabled()
 
                             Button(String(localized: "pin.delete")) {
                                 pinSettingsViewModel.deletePIN()
                             }
                             .buttonStyle(.bordered)
                             .tint(.red)
+                            .focusEffectDisabled()
                         }
                     } else {
                         // PIN 설정 안 된 경우 - 설정 필드
@@ -73,15 +81,17 @@ struct MainView: View {
                             SecureField(String(localized: "pin.enter"), text: $pinSettingsViewModel.newPIN)
                                 .textFieldStyle(.roundedBorder)
                                 .frame(maxWidth: .infinity)
+                                .focused($focusedField, equals: .newPIN)
 
                             SecureField(String(localized: "pin.confirmInput"), text: $pinSettingsViewModel.confirmPIN)
                                 .textFieldStyle(.roundedBorder)
                                 .frame(maxWidth: .infinity)
+                                .focused($focusedField, equals: .confirmPIN)
 
                             Button(String(localized: "pin.set")) {
                                 pinSettingsViewModel.setPIN()
                             }
-                            .buttonStyle(.borderedProminent)
+                            .buttonStyle(.bordered)
                             .disabled(!pinSettingsViewModel.canSetPIN)
                         }
                     }
@@ -111,9 +121,9 @@ struct MainView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.bordered)
             .controlSize(.large)
-            .disabled(viewModel.appState.isLocked)
+            .disabled(viewModel.appState.isLocked || !pinSettingsViewModel.isPINSet)
 
             Spacer()
 
@@ -125,7 +135,14 @@ struct MainView: View {
             }
         }
         .padding(24)
-        .frame(minWidth: 300, minHeight: 300)
+        .frame(minWidth: 300)
+        .fixedSize(horizontal: false, vertical: true)
+        .onAppear {
+            // PIN 미설정 시 첫 번째 입력 필드로 포커스
+            if !pinSettingsViewModel.isPINSet {
+                focusedField = .newPIN
+            }
+        }
     }
 }
 

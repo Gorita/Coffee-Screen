@@ -24,6 +24,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     /// 현재 잠금 상태
     private var isLocked: Bool = false
 
+    /// PIN 설정 여부
+    private var isPINSet: Bool = false
+
     /// 아이콘이 회전된 상태인지
     private var isRotated: Bool = false
 
@@ -40,8 +43,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     // MARK: - Public Methods
 
     /// 상태 업데이트
-    func updateStatus(isLocked: Bool) {
+    func updateStatus(isLocked: Bool, isPINSet: Bool) {
         self.isLocked = isLocked
+        self.isPINSet = isPINSet
         updateMenu()
     }
 
@@ -225,6 +229,10 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             keyEquivalent: "l"
         )
         lockItem.target = self
+        // PIN 미설정 시 잠금 비활성화
+        if !isLocked && !isPINSet {
+            lockItem.isEnabled = false
+        }
         menu.addItem(lockItem)
 
         menu.addItem(NSMenuItem.separator())

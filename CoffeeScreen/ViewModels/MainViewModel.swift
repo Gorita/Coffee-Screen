@@ -14,6 +14,7 @@ final class MainViewModel: ObservableObject {
     private let shieldWindowController = ShieldWindowController()
     private let emergencyEscapeHandler = EmergencyEscapeHandler()
     private let statusBarController = StatusBarController()
+    private let pinManager = PINManager.shared
 
     // MARK: - ViewModels
 
@@ -36,6 +37,12 @@ final class MainViewModel: ObservableObject {
 
     /// 화면 잠금 시작
     func startLock() {
+        // PIN 설정 여부 확인
+        guard isPINSet else {
+            appState.lastError = String(localized: "error.pin.notSet")
+            return
+        }
+
         // 시스템 수면 방지 활성화
         let powerResult = powerController.startAwake()
         switch powerResult {
@@ -95,6 +102,11 @@ final class MainViewModel: ObservableObject {
         appState.isAwake
     }
 
+    /// PIN 설정 여부
+    var isPINSet: Bool {
+        pinManager.isPINSet
+    }
+
     // MARK: - Private Methods
 
     /// 비상 탈출 핸들러 설정
@@ -130,6 +142,6 @@ final class MainViewModel: ObservableObject {
 
     /// 상태바 업데이트
     private func updateStatusBar() {
-        statusBarController.updateStatus(isLocked: appState.isLocked)
+        statusBarController.updateStatus(isLocked: appState.isLocked, isPINSet: isPINSet)
     }
 }
