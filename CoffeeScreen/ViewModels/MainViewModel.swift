@@ -13,6 +13,7 @@ final class MainViewModel: ObservableObject {
     private let kioskEnforcer = KioskEnforcer()
     private let shieldWindowController = ShieldWindowController()
     private let emergencyEscapeHandler = EmergencyEscapeHandler()
+    private let statusBarController = StatusBarController()
 
     // MARK: - ViewModels
 
@@ -31,6 +32,7 @@ final class MainViewModel: ObservableObject {
 
     init() {
         setupEmergencyEscape()
+        setupStatusBar()
     }
 
     // MARK: - Public Methods
@@ -57,6 +59,9 @@ final class MainViewModel: ObservableObject {
 
         appState.isLocked = true
         appState.connectedScreens = shieldWindowController.shieldCount
+
+        // 상태바 업데이트
+        updateStatusBar()
     }
 
     /// 화면 잠금 해제
@@ -78,6 +83,9 @@ final class MainViewModel: ObservableObject {
         appState.isAwake = false
         appState.lastError = nil
         shieldViewModel.resetAll()
+
+        // 상태바 업데이트
+        updateStatusBar()
     }
 
     // MARK: - State Accessors
@@ -98,6 +106,34 @@ final class MainViewModel: ObservableObject {
             guard let self, self.appState.isLocked else { return }
             self.stopLock()
         }
+    }
+
+    /// 상태바 컨트롤러 설정
+    private func setupStatusBar() {
+        statusBarController.onLockToggle = { [weak self] in
+            guard let self else { return }
+            if self.appState.isLocked {
+                // 잠금 상태에서는 메뉴바로 해제 불가 (인증 필요)
+            } else {
+                self.startLock()
+            }
+        }
+
+        statusBarController.onOpenPINSettings = {
+            // 메인 윈도우 활성화
+            NSApp.activate(ignoringOtherApps: true)
+            for window in NSApp.windows {
+                if !(window is ShieldWindow) && window.contentView != nil {
+                    window.makeKeyAndOrderFront(nil)
+                    break
+                }
+            }
+        }
+    }
+
+    /// 상태바 업데이트
+    private func updateStatusBar() {
+        statusBarController.updateStatus(isLocked: appState.isLocked)
     }
 
     /// 키오스크 모드 재활성화 (Touch ID 인증 후)
