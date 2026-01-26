@@ -210,14 +210,25 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private func setupMenu() {
         menu = NSMenu()
         menu?.delegate = self
+        // 저장된 상태로 메뉴 업데이트
         updateMenu()
         statusItem?.menu = menu
+    }
+
+    /// 메뉴가 준비되었는지 확인하고 업데이트
+    private func ensureMenuUpdated() {
+        // 메뉴가 아직 없으면 나중에 setupMenu에서 처리됨
+        guard menu != nil else { return }
+        updateMenu()
     }
 
     private func updateMenu() {
         guard let menu = menu else { return }
 
         menu.removeAllItems()
+
+        // 현재 PIN 상태 직접 확인
+        let currentPINSet = PINManager.shared.isPINSet
 
         // 잠금/해제 메뉴
         let lockTitle = isLocked
@@ -230,7 +241,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         )
         lockItem.target = self
         // PIN 미설정 시 잠금 비활성화
-        if !isLocked && !isPINSet {
+        if !isLocked && !currentPINSet {
             lockItem.isEnabled = false
         }
         menu.addItem(lockItem)
@@ -334,6 +345,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     nonisolated func menuWillOpen(_ menu: NSMenu) {
         Task { @MainActor in
+            self.updateMenu()
             self.rotateIcon(toLock: true)
         }
     }

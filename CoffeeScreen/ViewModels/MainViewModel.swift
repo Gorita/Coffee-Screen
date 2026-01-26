@@ -31,6 +31,18 @@ final class MainViewModel: ObservableObject {
     init() {
         setupEmergencyEscape()
         setupStatusBar()
+        observePINChanges()
+    }
+
+    /// PIN 변경 알림 구독
+    private func observePINChanges() {
+        NotificationCenter.default.addObserver(
+            forName: PINManager.pinDidChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.updateStatusBar()
+        }
     }
 
     // MARK: - Public Methods
@@ -129,15 +141,17 @@ final class MainViewModel: ObservableObject {
         }
 
         statusBarController.onOpenPINSettings = {
-            // 메인 윈도우 활성화
             NSApp.activate(ignoringOtherApps: true)
-            for window in NSApp.windows {
-                if !(window is ShieldWindow) && window.contentView != nil {
-                    window.makeKeyAndOrderFront(nil)
-                    break
-                }
+
+            // 메인 윈도우 찾아서 표시
+            for window in NSApp.windows where !(window is ShieldWindow) {
+                window.makeKeyAndOrderFront(nil)
+                return
             }
         }
+
+        // 초기 상태 업데이트
+        updateStatusBar()
     }
 
     /// 상태바 업데이트

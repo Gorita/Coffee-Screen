@@ -7,6 +7,9 @@ final class PINManager {
 
     private static let pinKey = "com.gorita.coffee-screen.userPIN"
 
+    /// PIN 변경 알림
+    static let pinDidChangeNotification = Notification.Name("com.gorita.coffee-screen.pinDidChange")
+
     // MARK: - Singleton
 
     static let shared = PINManager()
@@ -28,6 +31,7 @@ final class PINManager {
         guard isValidPIN(pin) else { return false }
 
         UserDefaults.standard.set(pin, forKey: Self.pinKey)
+        NotificationCenter.default.post(name: Self.pinDidChangeNotification, object: nil)
         return true
     }
 
@@ -43,6 +47,7 @@ final class PINManager {
     @discardableResult
     func deletePIN() -> Bool {
         UserDefaults.standard.removeObject(forKey: Self.pinKey)
+        NotificationCenter.default.post(name: Self.pinDidChangeNotification, object: nil)
         return true
     }
 
