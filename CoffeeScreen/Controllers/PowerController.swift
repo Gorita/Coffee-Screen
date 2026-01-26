@@ -22,9 +22,9 @@ final class PowerController {
             stopAwake()
         }
 
-        let reason = "Coffee-Screen: Long running task in progress" as CFString
+        let reason = "Coffee-Screen: Screen lock active - preventing sleep" as CFString
         let result = IOPMAssertionCreateWithName(
-            kIOPMAssertionTypeNoIdleSleep as CFString,
+            kIOPMAssertionTypePreventUserIdleDisplaySleep as CFString,
             IOPMAssertionLevel(kIOPMAssertionLevelOn),
             reason,
             &assertionID
