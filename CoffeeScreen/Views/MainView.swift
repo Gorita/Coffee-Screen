@@ -6,23 +6,37 @@ struct MainView: View {
     @StateObject private var pinSettingsViewModel = PINSettingsViewModel()
     @StateObject private var keyCombinationViewModel = KeyCombinationSettingsViewModel()
     @State private var showEscapeKeyPopover = false
+    @AppStorage("backgroundStyle") private var backgroundStyleRaw: Int = 0
+
+    private var backgroundStyle: BackgroundStyle {
+        get { BackgroundStyle(rawValue: backgroundStyleRaw) ?? .vintageGrid }
+        set { backgroundStyleRaw = newValue.rawValue }
+    }
 
     private let pixelFont = "Silkscreen-Regular"
 
     var body: some View {
         VStack(spacing: 24) {
-            // App icon and title
+            // App icon and title (clickable to toggle background)
             VStack(spacing: 8) {
-                Image(nsImage: NSApp.applicationIconImage)
-                    .resizable()
-                    .frame(width: 64, height: 64)
+                Button {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        backgroundStyleRaw = backgroundStyleRaw == 0 ? 1 : 0
+                    }
+                } label: {
+                    Image(nsImage: NSApp.applicationIconImage)
+                        .resizable()
+                        .frame(width: 64, height: 64)
+                }
+                .buttonStyle(.plain)
+                .help("Click to change background")
 
                 Text("Coffee-Screen")
                     .font(.custom(pixelFont, size: 20))
             }
 
             // PIN settings section
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 16) {
                 HStack {
                     HStack(spacing: 6) {
                         Image(systemName: "number")
@@ -125,7 +139,16 @@ struct MainView: View {
         .animation(.easeInOut(duration: 0.25), value: pinSettingsViewModel.isPINSet)
         .padding(24)
         .frame(minWidth: 320, maxWidth: .infinity, maxHeight: .infinity)
-        .background(VintageGridBackground().ignoresSafeArea())
+        .background(
+            Group {
+                if backgroundStyle == .vintageGrid {
+                    VintageGridBackground()
+                } else {
+                    PixelArtBackground()
+                }
+            }
+            .ignoresSafeArea()
+        )
     }
 }
 
@@ -300,6 +323,17 @@ struct EscapeKeyPopoverView: View {
     }
 }
 
+// MARK: - Background Style Enum
+
+enum BackgroundStyle: Int {
+    case vintageGrid = 0
+    case pixelArt = 1
+
+    mutating func toggle() {
+        self = self == .vintageGrid ? .pixelArt : .vintageGrid
+    }
+}
+
 // MARK: - Vintage Grid Background
 
 struct VintageGridBackground: View {
@@ -351,5 +385,122 @@ struct VintageGridBackground: View {
                 )
             }
         }
+    }
+}
+
+// MARK: - Pixel Art Pattern Background
+
+struct PixelArtBackground: View {
+    private let tileSize: CGFloat = 36
+    private let iconColor = Color(red: 0.88, green: 0.84, blue: 0.78)
+    private let bgColor = Color(red: 0.96, green: 0.94, blue: 0.90)
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                // Background color (warm cream)
+                bgColor
+
+                // Pixel art icons pattern
+                Canvas { context, size in
+                    let cols = Int(ceil(size.width / tileSize)) + 1
+                    let rows = Int(ceil(size.height / tileSize)) + 1
+
+                    for row in 0..<rows {
+                        for col in 0..<cols {
+                            let x = CGFloat(col) * tileSize + (row.isMultiple(of: 2) ? tileSize / 2 : 0)
+                            let y = CGFloat(row) * tileSize
+
+                            // Cycle through different icons
+                            let iconType = (row * 3 + col) % 4
+                            switch iconType {
+                            case 0:
+                                drawCoffeeCup(context: context, at: CGPoint(x: x + 6, y: y + 6))
+                            case 1:
+                                drawLock(context: context, at: CGPoint(x: x + 6, y: y + 6))
+                            case 2:
+                                drawCoffeeBean(context: context, at: CGPoint(x: x + 8, y: y + 8))
+                            case 3:
+                                drawHeart(context: context, at: CGPoint(x: x + 8, y: y + 8))
+                            default:
+                                break
+                            }
+                        }
+                    }
+                }
+                .frame(width: geometry.size.width, height: geometry.size.height)
+            }
+        }
+    }
+
+    // Cute pixel coffee cup
+    private func drawCoffeeCup(context: GraphicsContext, at point: CGPoint) {
+        var path = Path()
+        // Cup body (rounded)
+        path.addRect(CGRect(x: point.x + 1, y: point.y + 6, width: 10, height: 8))
+        path.addRect(CGRect(x: point.x + 2, y: point.y + 5, width: 8, height: 1))
+        path.addRect(CGRect(x: point.x + 2, y: point.y + 14, width: 8, height: 1))
+        // Handle
+        path.addRect(CGRect(x: point.x + 11, y: point.y + 7, width: 3, height: 2))
+        path.addRect(CGRect(x: point.x + 13, y: point.y + 8, width: 1, height: 3))
+        path.addRect(CGRect(x: point.x + 11, y: point.y + 11, width: 3, height: 2))
+        context.fill(path, with: .color(iconColor.opacity(0.35)))
+
+        // Steam
+        var steam = Path()
+        steam.addRect(CGRect(x: point.x + 3, y: point.y + 1, width: 2, height: 2))
+        steam.addRect(CGRect(x: point.x + 6, y: point.y + 0, width: 2, height: 3))
+        steam.addRect(CGRect(x: point.x + 9, y: point.y + 2, width: 2, height: 2))
+        context.fill(steam, with: .color(iconColor.opacity(0.2)))
+    }
+
+    // Cute pixel lock
+    private func drawLock(context: GraphicsContext, at point: CGPoint) {
+        var path = Path()
+        // Body (rounded rectangle feel)
+        path.addRect(CGRect(x: point.x + 2, y: point.y + 7, width: 10, height: 8))
+        path.addRect(CGRect(x: point.x + 3, y: point.y + 6, width: 8, height: 1))
+        path.addRect(CGRect(x: point.x + 3, y: point.y + 15, width: 8, height: 1))
+        // Shackle
+        path.addRect(CGRect(x: point.x + 4, y: point.y + 2, width: 2, height: 6))
+        path.addRect(CGRect(x: point.x + 8, y: point.y + 2, width: 2, height: 6))
+        path.addRect(CGRect(x: point.x + 4, y: point.y + 1, width: 6, height: 2))
+        context.fill(path, with: .color(iconColor.opacity(0.35)))
+
+        // Keyhole
+        var keyhole = Path()
+        keyhole.addRect(CGRect(x: point.x + 6, y: point.y + 9, width: 2, height: 2))
+        keyhole.addRect(CGRect(x: point.x + 6.5, y: point.y + 11, width: 1, height: 2))
+        context.fill(keyhole, with: .color(bgColor))
+    }
+
+    // Cute pixel coffee bean
+    private func drawCoffeeBean(context: GraphicsContext, at point: CGPoint) {
+        var path = Path()
+        // Bean shape (oval-ish)
+        path.addRect(CGRect(x: point.x + 2, y: point.y + 1, width: 8, height: 2))
+        path.addRect(CGRect(x: point.x + 1, y: point.y + 3, width: 10, height: 8))
+        path.addRect(CGRect(x: point.x + 2, y: point.y + 11, width: 8, height: 2))
+        context.fill(path, with: .color(iconColor.opacity(0.35)))
+
+        // Center line
+        var line = Path()
+        line.addRect(CGRect(x: point.x + 5, y: point.y + 3, width: 2, height: 8))
+        context.fill(line, with: .color(bgColor.opacity(0.8)))
+    }
+
+    // Cute pixel heart
+    private func drawHeart(context: GraphicsContext, at point: CGPoint) {
+        var path = Path()
+        // Heart shape
+        path.addRect(CGRect(x: point.x + 1, y: point.y + 2, width: 4, height: 4))
+        path.addRect(CGRect(x: point.x + 7, y: point.y + 2, width: 4, height: 4))
+        path.addRect(CGRect(x: point.x + 0, y: point.y + 4, width: 12, height: 4))
+        path.addRect(CGRect(x: point.x + 1, y: point.y + 8, width: 10, height: 2))
+        path.addRect(CGRect(x: point.x + 2, y: point.y + 10, width: 8, height: 2))
+        path.addRect(CGRect(x: point.x + 3, y: point.y + 12, width: 6, height: 1))
+        path.addRect(CGRect(x: point.x + 4, y: point.y + 13, width: 4, height: 1))
+        path.addRect(CGRect(x: point.x + 5, y: point.y + 14, width: 2, height: 1))
+        context.fill(path, with: .color(iconColor.opacity(0.35)))
     }
 }
