@@ -126,8 +126,8 @@ struct MainView: View {
         }
         .animation(.easeInOut(duration: 0.25), value: pinSettingsViewModel.isPINSet)
         .padding(24)
-        .frame(minWidth: 320)
-        .fixedSize(horizontal: false, vertical: true)
+        .frame(minWidth: 320, maxWidth: .infinity, maxHeight: .infinity)
+        .background(VintageGridBackground().ignoresSafeArea())
     }
 }
 
@@ -299,5 +299,59 @@ struct EscapeKeyPopoverView: View {
         }
         .padding(16)
         .frame(width: 320)
+    }
+}
+
+// MARK: - Vintage Grid Background
+
+struct VintageGridBackground: View {
+    private let gridSpacing: CGFloat = 20
+    private let lineWidth: CGFloat = 0.5
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                // Background color (vintage paper)
+                Color(red: 0.94, green: 0.91, blue: 0.84)
+
+                // Grid pattern
+                Canvas { context, size in
+                    let gridColor = Color(red: 0.75, green: 0.70, blue: 0.60).opacity(0.5)
+
+                    // Vertical lines
+                    var x: CGFloat = 0
+                    while x <= size.width {
+                        var path = Path()
+                        path.move(to: CGPoint(x: x, y: 0))
+                        path.addLine(to: CGPoint(x: x, y: size.height))
+                        context.stroke(path, with: .color(gridColor), lineWidth: lineWidth)
+                        x += gridSpacing
+                    }
+
+                    // Horizontal lines
+                    var y: CGFloat = 0
+                    while y <= size.height {
+                        var path = Path()
+                        path.move(to: CGPoint(x: 0, y: y))
+                        path.addLine(to: CGPoint(x: size.width, y: y))
+                        context.stroke(path, with: .color(gridColor), lineWidth: lineWidth)
+                        y += gridSpacing
+                    }
+                }
+                .frame(width: geometry.size.width, height: geometry.size.height)
+
+                // Vignette overlay (darker edges)
+                let maxDimension = max(geometry.size.width, geometry.size.height)
+                RadialGradient(
+                    gradient: Gradient(colors: [
+                        Color.clear,
+                        Color(red: 0.35, green: 0.25, blue: 0.15).opacity(0.6)
+                    ]),
+                    center: .center,
+                    startRadius: maxDimension * 0.05,
+                    endRadius: maxDimension * 0.6
+                )
+            }
+        }
     }
 }
