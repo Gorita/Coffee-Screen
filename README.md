@@ -4,7 +4,7 @@
   <img src="coffee-screen.png" alt="Coffee-Screen" width="600">
 </p>
 
-> A macOS application for long-running process protection and screen security
+> A lightweight macOS application for long-running process protection and screen security
 
 **[한국어 README](README_KR.md)**
 
@@ -21,6 +21,12 @@ Designed to work safely in enterprise security environments (MDM, DLP, antivirus
 - **Input Blocking**: Prevents system escape via Cmd+Tab, force quit, etc. using Kiosk Mode API
 - **Secure Unlock**: Authentication via Touch ID, password, or PIN
 - **Menu Bar Control**: Quick lock/unlock and settings access from the menu bar
+
+## Why Lightweight?
+
+- **Zero external dependencies** - Uses only native macOS frameworks (SwiftUI, AppKit, IOKit)
+- **Small footprint** - ~2,500 lines of code, 21 Swift files
+- **Minimal resource usage** - Just one power assertion and a few windows at runtime
 
 ## System Requirements
 

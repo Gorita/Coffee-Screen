@@ -4,7 +4,7 @@
   <img src="coffee-screen.png" alt="Coffee-Screen" width="600">
 </p>
 
-> macOS용 장기 실행 프로세스 보장 및 화면 보안 애플리케이션
+> 가벼운 macOS용 장기 실행 프로세스 보장 및 화면 보안 애플리케이션
 
 **[English README](README.md)**
 
@@ -21,6 +21,12 @@ Coffee-Screen은 AI 학습, 대용량 데이터 렌더링 등 장시간 작업�
 - **입력 차단**: Kiosk Mode API로 Cmd+Tab, 강제 종료 등 시스템 이탈 방지
 - **안전한 잠금 해제**: Touch ID, 비밀번호 또는 PIN으로 인증
 - **상태바 메뉴**: 메뉴바에서 빠르게 잠금/해제 및 설정 접근
+
+## 왜 가벼운가?
+
+- **외부 의존성 제로** - 네이티브 macOS 프레임워크만 사용 (SwiftUI, AppKit, IOKit)
+- **작은 코드베이스** - ~2,500줄, Swift 파일 21개
+- **최소 리소스 사용** - 런타임에 power assertion 하나와 윈도우 몇 개만 사용
 
 ## 시스템 요구사항
 
