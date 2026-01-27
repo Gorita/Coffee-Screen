@@ -480,40 +480,32 @@ struct UnlockView: View {
 ### 작업 항목
 
 #### 7.1 코드 서명
-- [ ] Developer ID Application 인증서 설정
-- [ ] Team ID 설정
-- [ ] Hardened Runtime 활성화
+- [x] Developer ID Application 인증서 설정 (project.yml Release config)
+- [x] Team ID 설정 (환경변수 DEVELOPMENT_TEAM)
+- [x] Hardened Runtime 활성화 (Release config에서 YES)
 
 #### 7.2 Notarization
+- [x] 빌드 스크립트 생성 (scripts/build.sh)
+- [x] 공증 스크립트 생성 (scripts/notarize.sh)
+- [x] ExportOptions.plist 생성
+- [x] 환경변수 템플릿 생성 (.env.template)
+
 ```bash
-# 앱 아카이브
-xcodebuild -scheme CoffeeScreen -configuration Release archive \
-  -archivePath ./build/CoffeeScreen.xcarchive
-
-# 앱 추출
-xcodebuild -exportArchive \
-  -archivePath ./build/CoffeeScreen.xcarchive \
-  -exportPath ./build/export \
-  -exportOptionsPlist ExportOptions.plist
-
-# 공증 제출
-xcrun notarytool submit ./build/export/CoffeeScreen.app.zip \
-  --keychain-profile "AC_PASSWORD" \
-  --wait
-
-# Staple
-xcrun stapler staple ./build/export/CoffeeScreen.app
+# 빌드 및 공증 실행
+source .env && ./scripts/build.sh --notarize
 ```
 
 #### 7.3 배포 패키지
-- [ ] DMG 파일 생성
-- [ ] README 포함
-- [ ] GitHub Release 생성
+- [x] DMG 생성 스크립트 (scripts/create-dmg.sh)
+- [x] 전체 릴리스 스크립트 (scripts/release.sh)
+- [x] 배포 가이드 문서 (docs/DEPLOYMENT.md)
+- [ ] GitHub Release 생성 (수동 실행 필요)
 
 ### 완료 기준
-- [ ] 앱이 서명되고 공증됨
-- [ ] Gatekeeper 경고 없이 실행됨
-- [ ] DMG 파일이 올바르게 마운트됨
+- [x] 빌드/서명/공증 스크립트 완성
+- [ ] 실제 인증서로 서명 테스트
+- [ ] Gatekeeper 경고 없이 실행 확인
+- [ ] DMG 설치 테스트
 
 ---
 

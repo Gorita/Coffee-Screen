@@ -28,9 +28,5 @@
 	<string></string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-	<key>NSAppSleepDisabled</key>
-	<true/>
-	<key>ATSApplicationFontsPath</key>
-	<string>.</string>
 </dict>
 </plist>
