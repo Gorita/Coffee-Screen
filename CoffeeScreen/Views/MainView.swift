@@ -38,10 +38,8 @@ struct MainView: View {
                             showEscapeKeyPopover.toggle()
                         } label: {
                             Image(systemName: "keyboard.badge.ellipsis")
-                                .font(.system(size: 14))
-                                .foregroundStyle(Color.coffeeBrown.opacity(0.7))
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.pixelIcon)
                         .help("Escape Key Settings")
                         .popover(isPresented: $showEscapeKeyPopover, arrowEdge: .bottom) {
                             EscapeKeyPopoverView(viewModel: keyCombinationViewModel)

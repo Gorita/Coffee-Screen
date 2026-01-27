@@ -58,16 +58,20 @@ struct PixelShape: Shape {
 
 struct PixelButtonStyle: ButtonStyle {
     var isDestructive: Bool = false
+    @State private var isHovered: Bool = false
 
     private var backgroundColor: Color {
-        isDestructive ? Color.red.opacity(0.8) : Color.coffeeBrown
+        isDestructive ? Color(red: 0.85, green: 0.30, blue: 0.30) : Color.coffeeBrown
     }
 
     private var pressedColor: Color {
-        isDestructive ? Color.red.opacity(0.6) : Color.coffeeDark
+        isDestructive ? Color(red: 0.70, green: 0.25, blue: 0.25) : Color.coffeeDark
     }
 
     func makeBody(configuration: Configuration) -> some View {
+        let elevation: CGFloat = configuration.isPressed ? 0 : (isHovered ? 4 : 2)
+        let yOffset: CGFloat = configuration.isPressed ? 2 : (isHovered ? -1 : 0)
+
         configuration.label
             .font(.custom("Silkscreen-Regular", size: 12))
             .foregroundStyle(.white)
@@ -79,29 +83,26 @@ struct PixelButtonStyle: ButtonStyle {
                 PixelShape(cornerSize: 4)
                     .stroke(Color.black.opacity(0.4), lineWidth: 2)
             )
-            .overlay(
-                // Inner highlight (top)
-                VStack {
-                    PixelShape(cornerSize: 4)
-                        .fill(Color.white.opacity(0.15))
-                        .frame(height: 3)
-                        .mask(
-                            VStack {
-                                Rectangle().frame(height: 3)
-                                Spacer()
-                            }
-                        )
-                    Spacer()
-                }
-            )
-            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .compositingGroup()
+            .shadow(color: Color.black.opacity(0.4), radius: 0, x: 0, y: elevation)
+            .offset(y: yOffset)
+            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
+            .animation(.easeOut(duration: 0.15), value: isHovered)
+            .onHover { hovering in
+                isHovered = hovering
+            }
     }
 }
 
 // MARK: - Pixel Button Style (Secondary)
 
 struct PixelButtonStyleSecondary: ButtonStyle {
+    @State private var isHovered: Bool = false
+
     func makeBody(configuration: Configuration) -> some View {
+        let elevation: CGFloat = configuration.isPressed ? 0 : (isHovered ? 4 : 2)
+        let yOffset: CGFloat = configuration.isPressed ? 2 : (isHovered ? -1 : 0)
+
         configuration.label
             .font(.custom("Silkscreen-Regular", size: 12))
             .foregroundStyle(Color.coffeeDark)
@@ -113,7 +114,14 @@ struct PixelButtonStyleSecondary: ButtonStyle {
                 PixelShape(cornerSize: 4)
                     .stroke(Color.coffeeBrown.opacity(0.5), lineWidth: 2)
             )
-            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .compositingGroup()
+            .shadow(color: Color.coffeeBrown.opacity(0.3), radius: 0, x: 0, y: elevation)
+            .offset(y: yOffset)
+            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
+            .animation(.easeOut(duration: 0.15), value: isHovered)
+            .onHover { hovering in
+                isHovered = hovering
+            }
     }
 }
 
@@ -121,8 +129,12 @@ struct PixelButtonStyleSecondary: ButtonStyle {
 
 struct PixelButtonStyleLarge: ButtonStyle {
     var isDisabled: Bool = false
+    @State private var isHovered: Bool = false
 
     func makeBody(configuration: Configuration) -> some View {
+        let elevation: CGFloat = isDisabled ? 0 : (configuration.isPressed ? 0 : (isHovered ? 6 : 3))
+        let yOffset: CGFloat = isDisabled ? 0 : (configuration.isPressed ? 3 : (isHovered ? -1 : 0))
+
         configuration.label
             .font(.custom("Silkscreen-Regular", size: 14))
             .foregroundStyle(.white)
@@ -130,7 +142,7 @@ struct PixelButtonStyleLarge: ButtonStyle {
             .padding(.vertical, 14)
             .background(
                 isDisabled
-                    ? Color.gray.opacity(0.5)
+                    ? Color.gray
                     : (configuration.isPressed ? Color.coffeeDark : Color.coffeeBrown)
             )
             .clipShape(PixelShape(cornerSize: 6))
@@ -138,18 +150,48 @@ struct PixelButtonStyleLarge: ButtonStyle {
                 PixelShape(cornerSize: 6)
                     .stroke(Color.black.opacity(0.4), lineWidth: 3)
             )
-            .overlay(
-                // Inner highlight
-                VStack {
-                    Rectangle()
-                        .fill(Color.white.opacity(isDisabled ? 0.05 : 0.15))
-                        .frame(height: 4)
-                        .padding(.horizontal, 6)
-                        .padding(.top, 2)
-                    Spacer()
+            .compositingGroup()
+            .shadow(color: Color.black.opacity(0.5), radius: 0, x: 0, y: elevation)
+            .offset(y: yOffset)
+            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
+            .animation(.easeOut(duration: 0.15), value: isHovered)
+            .onHover { hovering in
+                if !isDisabled {
+                    isHovered = hovering
                 }
+            }
+    }
+}
+
+// MARK: - Pixel Icon Button Style (for small icon buttons)
+
+struct PixelIconButtonStyle: ButtonStyle {
+    @State private var isHovered: Bool = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        let elevation: CGFloat = configuration.isPressed ? 0 : (isHovered ? 3 : 1)
+        let yOffset: CGFloat = configuration.isPressed ? 1 : (isHovered ? -1 : 0)
+
+        configuration.label
+            .font(.system(size: 14))
+            .foregroundStyle(isHovered ? Color.coffeeBrown : Color.coffeeBrown.opacity(0.8))
+            .padding(6)
+            .background(
+                Circle()
+                    .fill(configuration.isPressed ? Color.coffeeLight : Color.white)
             )
-            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .overlay(
+                Circle()
+                    .stroke(Color.coffeeBrown.opacity(0.3), lineWidth: 1)
+            )
+            .compositingGroup()
+            .shadow(color: Color.coffeeBrown.opacity(0.4), radius: 0, x: 0, y: elevation)
+            .offset(y: yOffset)
+            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
+            .animation(.easeOut(duration: 0.15), value: isHovered)
+            .onHover { hovering in
+                isHovered = hovering
+            }
     }
 }
 
@@ -162,6 +204,10 @@ extension ButtonStyle where Self == PixelButtonStyle {
 
 extension ButtonStyle where Self == PixelButtonStyleSecondary {
     static var pixelSecondary: PixelButtonStyleSecondary { PixelButtonStyleSecondary() }
+}
+
+extension ButtonStyle where Self == PixelIconButtonStyle {
+    static var pixelIcon: PixelIconButtonStyle { PixelIconButtonStyle() }
 }
 
 // MARK: - Preview
