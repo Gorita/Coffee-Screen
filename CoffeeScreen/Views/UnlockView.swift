@@ -46,7 +46,7 @@ struct UnlockView: View {
                     viewModel.switchToTouchID()
                 }) {
                     HStack(spacing: 6) {
-                        Image(systemName: "faceid")
+                        Image(systemName: "touchid")
                         Text("Use Touch ID")
                             .font(.custom(pixelFont, size: 10))
                     }
@@ -96,7 +96,7 @@ struct TouchIDButton: View {
                         .scaleEffect(0.8)
                         .tint(.white)
                 } else {
-                    Image(systemName: "faceid")
+                    Image(systemName: "touchid")
                 }
                 Text("Unlock")
                     .font(.custom(pixelFont, size: 12))
