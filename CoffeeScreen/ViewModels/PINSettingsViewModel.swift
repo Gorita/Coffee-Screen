@@ -54,21 +54,21 @@ final class PINSettingsViewModel: ObservableObject {
         clearMessages()
 
         guard newPIN == confirmPIN else {
-            errorMessage = String(localized: "error.pin.mismatch")
+            errorMessage = "PINs do not match"
             return
         }
 
         guard pinManager.isValidPIN(newPIN) else {
-            errorMessage = String(localized: "error.pin.invalid")
+            errorMessage = "Invalid PIN format"
             return
         }
 
         if pinManager.setPIN(newPIN) {
-            successMessage = String(localized: "pin.setSuccess")
+            successMessage = "PIN set successfully"
             clearInput()
             isChangingPIN = false
         } else {
-            errorMessage = String(localized: "error.pin.setFailed")
+            errorMessage = "Failed to set PIN"
         }
     }
 
@@ -77,9 +77,9 @@ final class PINSettingsViewModel: ObservableObject {
         clearMessages()
 
         if pinManager.deletePIN() {
-            successMessage = String(localized: "pin.deleteSuccess")
+            successMessage = "PIN deleted"
         } else {
-            errorMessage = String(localized: "error.pin.deleteFailed")
+            errorMessage = "Failed to delete PIN"
         }
     }
 

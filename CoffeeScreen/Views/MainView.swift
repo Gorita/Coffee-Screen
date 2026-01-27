@@ -1,114 +1,132 @@
 import SwiftUI
 
-/// 메인 설정 화면
+/// Main settings view
 struct MainView: View {
     @EnvironmentObject var viewModel: MainViewModel
     @StateObject private var pinSettingsViewModel = PINSettingsViewModel()
     @StateObject private var keyCombinationViewModel = KeyCombinationSettingsViewModel()
     @State private var showEscapeKeyPopover = false
 
+    private let pixelFont = "Silkscreen-Regular"
+
     var body: some View {
         VStack(spacing: 24) {
-            // 앱 아이콘 및 제목
-            HStack {
-                Spacer()
-                VStack(spacing: 8) {
-                    Image(systemName: "cup.and.saucer.fill")
-                        .font(.system(size: 48))
-                        .foregroundStyle(.brown)
+            // App icon and title
+            VStack(spacing: 8) {
+                Image(nsImage: NSApp.applicationIconImage)
+                    .resizable()
+                    .frame(width: 64, height: 64)
 
-                    Text(Constants.appName)
-                        .font(.title)
-                        .fontWeight(.bold)
-                }
-                Spacer()
-
-                // 비상 탈출 키 설정 버튼 (PIN 설정 시에만 표시)
-                if pinSettingsViewModel.isPINSet {
-                    Button {
-                        showEscapeKeyPopover.toggle()
-                    } label: {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.system(size: 16))
-                            .foregroundStyle(.orange)
-                    }
-                    .buttonStyle(.plain)
-                    .help(String(localized: "key.settings"))
-                    .popover(isPresented: $showEscapeKeyPopover, arrowEdge: .bottom) {
-                        EscapeKeyPopoverView(viewModel: keyCombinationViewModel)
-                    }
-                }
+                Text("Coffee-Screen")
+                    .font(.custom(pixelFont, size: 20))
             }
 
-            // PIN 설정 섹션
-            GroupBox {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Label(String(localized: "pin.settings"), systemImage: "number")
-                            .font(.headline)
-                        Spacer()
-                        if pinSettingsViewModel.isPINSet {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(.green)
-                        }
+            // PIN settings section
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    HStack(spacing: 6) {
+                        Image(systemName: "number")
+                        Text("PIN Settings")
+                            .font(.custom(pixelFont, size: 14))
                     }
 
+                    Spacer()
+
+                    // Escape key settings button (shown only when PIN is set)
                     if pinSettingsViewModel.isPINSet {
-                        // PIN이 설정된 경우 - 변경/삭제 옵션
-                        HStack(spacing: 8) {
-                            Button(String(localized: "pin.change")) {
-                                pinSettingsViewModel.showChangePIN()
-                            }
-                            .buttonStyle(.bordered)
-                            .focusEffectDisabled()
-
-                            Button(String(localized: "pin.delete")) {
-                                pinSettingsViewModel.deletePIN()
-                            }
-                            .buttonStyle(.bordered)
-                            .tint(.red)
-                            .focusEffectDisabled()
+                        Button {
+                            showEscapeKeyPopover.toggle()
+                        } label: {
+                            Image(systemName: "keyboard.badge.ellipsis")
+                                .font(.system(size: 14))
+                                .foregroundStyle(Color.coffeeBrown.opacity(0.7))
                         }
-                    } else {
-                        // PIN 설정 안 된 경우
-                        PINEntryView(viewModel: pinSettingsViewModel)
-                    }
-
-                    // 성공 메시지
-                    if let success = pinSettingsViewModel.successMessage {
-                        Text(success)
-                            .font(.caption)
-                            .foregroundStyle(.green)
+                        .buttonStyle(.plain)
+                        .help("Escape Key Settings")
+                        .popover(isPresented: $showEscapeKeyPopover, arrowEdge: .bottom) {
+                            EscapeKeyPopoverView(viewModel: keyCombinationViewModel)
+                        }
                     }
                 }
-                .padding(.vertical, 4)
-            }
 
-            // 잠금 버튼 (PIN 설정 시에만 표시)
+                if pinSettingsViewModel.isPINSet {
+                    // PIN is set - show change/delete options
+                    HStack(spacing: 12) {
+                        Button("Change") {
+                            pinSettingsViewModel.showChangePIN()
+                        }
+                        .buttonStyle(.pixelSecondary)
+
+                        Button("Delete") {
+                            pinSettingsViewModel.deletePIN()
+                        }
+                        .buttonStyle(.pixelDestructive)
+                    }
+                    .transition(.asymmetric(
+                        insertion: .opacity.animation(.easeIn(duration: 0.15).delay(0.15)),
+                        removal: .opacity.animation(.easeOut(duration: 0.15))
+                    ))
+                } else {
+                    // PIN not set
+                    PINEntryView(viewModel: pinSettingsViewModel)
+                        .transition(.asymmetric(
+                            insertion: .opacity.animation(.easeIn(duration: 0.15).delay(0.15)),
+                            removal: .opacity.animation(.easeOut(duration: 0.15))
+                        ))
+                }
+
+                // Success message
+                if let success = pinSettingsViewModel.successMessage {
+                    Text(success)
+                        .font(.custom(pixelFont, size: 10))
+                        .foregroundStyle(.green)
+                        .transition(.opacity)
+                }
+            }
+            .animation(.easeInOut(duration: 0.3), value: pinSettingsViewModel.isPINSet)
+            .padding(16)
+            .background(
+                Rectangle()
+                    .fill(Color.coffeeCream.opacity(0.3))
+                    .overlay(
+                        Rectangle()
+                            .strokeBorder(Color.coffeeBrown.opacity(0.3), lineWidth: 2)
+                    )
+            )
+
+            // Lock button (shown only when PIN is set)
             if pinSettingsViewModel.isPINSet {
                 Button(action: {
                     viewModel.startLock()
                 }) {
-                    Label(Constants.Strings.lockButton, systemImage: "lock.fill")
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
+                    HStack(spacing: 8) {
+                        Image(systemName: "lock.fill")
+                        Text("Lock Screen")
+                    }
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
+                .transition(.asymmetric(
+                    insertion: .opacity.animation(.easeIn(duration: 0.2).delay(0.2)),
+                    removal: .opacity.animation(.easeOut(duration: 0.15))
+                ))
+                .buttonStyle(PixelButtonStyleLarge(isDisabled: viewModel.appState.isLocked))
                 .disabled(viewModel.appState.isLocked)
             }
 
             Spacer()
 
-            // 전원 경고
+            // Power warning
             if !viewModel.appState.isPowerConnected {
-                Label(Constants.Strings.powerWarning, systemImage: "bolt.slash.fill")
-                    .font(.caption)
-                    .foregroundStyle(.orange)
+                HStack(spacing: 6) {
+                    Image(systemName: "bolt.slash.fill")
+                    Text("Connect power to prevent sleep")
+                        .font(.custom(pixelFont, size: 10))
+                }
+                .foregroundStyle(.orange)
             }
         }
+        .animation(.easeInOut(duration: 0.25), value: pinSettingsViewModel.isPINSet)
         .padding(24)
-        .frame(minWidth: 300)
+        .frame(minWidth: 320)
         .fixedSize(horizontal: false, vertical: true)
     }
 }
@@ -120,7 +138,7 @@ struct MainView_Previews: PreviewProvider {
     }
 }
 
-// MARK: - PIN 입력 뷰
+// MARK: - PIN Entry View
 
 struct PINEntryView: View {
     @ObservedObject var viewModel: PINSettingsViewModel
@@ -129,23 +147,27 @@ struct PINEntryView: View {
     @State private var showResetButton: Bool = false
     @FocusState private var isFocused: Bool
 
+    private let pixelFont = "Silkscreen-Regular"
     private let maxLength = 8
     private let minLength = 4
 
     var body: some View {
         VStack(spacing: 16) {
-            // 상태 텍스트
-            Text(isConfirmMode ? "입력한 암호를 다시 입력해주세요" : "새 PIN 입력 (4-8자리)")
-                .font(.subheadline)
+            // Status text
+            Text(isConfirmMode ? "Confirm your PIN" : "Enter new PIN (4-8 digits)")
+                .font(.custom(pixelFont, size: 10))
                 .foregroundStyle(.secondary)
 
-            // PIN 도트 표시
-            HStack(spacing: 12) {
+            // PIN dots display
+            HStack(spacing: 10) {
                 ForEach(0..<maxLength, id: \.self) { index in
-                    Circle()
-                        .fill(index < inputText.count ? Color.primary : Color.clear)
-                        .stroke(Color.secondary.opacity(0.3), lineWidth: 1.5)
-                        .frame(width: 16, height: 16)
+                    Rectangle()
+                        .fill(index < inputText.count ? Color.coffeeBrown : Color.clear)
+                        .frame(width: 14, height: 14)
+                        .overlay(
+                            Rectangle()
+                                .strokeBorder(Color.coffeeBrown.opacity(0.5), lineWidth: 2)
+                        )
                 }
             }
             .padding(.vertical, 8)
@@ -154,70 +176,54 @@ struct PINEntryView: View {
                 isFocused = true
             }
 
-            // 숨겨진 텍스트 필드 (키보드 입력용)
+            // Hidden text field for keyboard input
             TextField("", text: $inputText)
                 .focused($isFocused)
                 .textFieldStyle(PlainTextFieldStyle())
                 .frame(width: 1, height: 1)
                 .opacity(0)
                 .onChange(of: inputText) { _, newValue in
-                    // 숫자만 허용 + 최대 길이 제한
+                    // Allow only numbers + max length limit
                     let filtered = String(newValue.filter { $0.isNumber }.prefix(maxLength))
                     if filtered != newValue {
                         inputText = filtered
                     }
 
-                    // 새로운 입력이 있을 때만 에러 메시지 지움
+                    // Clear error message on new input
                     if !newValue.isEmpty {
                         viewModel.errorMessage = nil
                     }
 
-                    // 확인 모드에서 길이 일치 시 자동 확인
+                    // Auto-submit when lengths match in confirm mode
                     if isConfirmMode && inputText.count == viewModel.newPIN.count && inputText.count >= minLength {
                         submitPIN()
                     }
                 }
                 .onSubmit {
-                    // 엔터 키 처리
+                    // Handle enter key
                     if !isConfirmMode && inputText.count >= minLength {
                         goToConfirm()
                     }
                 }
 
-            // 에러 메시지 (고정 높이로 레이아웃 유지)
+            // Error message (fixed height to maintain layout)
             Text(viewModel.errorMessage ?? " ")
-                .font(.caption)
+                .font(.custom(pixelFont, size: 10))
                 .foregroundStyle(viewModel.errorMessage != nil ? .red : .clear)
                 .frame(height: 16)
 
-            // 다음/다시설정 버튼 (고정 높이로 레이아웃 유지)
+            // Next/Reset buttons (fixed height to maintain layout)
             HStack(spacing: 12) {
                 if showResetButton {
-                    Button(action: resetToNewPIN) {
-                        Text("암호 다시 설정")
-                            .font(.body)
-                            .fontWeight(.medium)
-                            .foregroundStyle(.primary)
-                            .frame(minWidth: 100)
-                            .padding(.vertical, 10)
-                            .padding(.horizontal, 20)
-                            .background(Color.secondary.opacity(0.15))
-                            .cornerRadius(8)
+                    Button("Reset") {
+                        resetToNewPIN()
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.pixelSecondary)
                 } else if !isConfirmMode && inputText.count >= minLength {
-                    Button(action: goToConfirm) {
-                        Text("다음")
-                            .font(.body)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(.white)
-                            .frame(minWidth: 100)
-                            .padding(.vertical, 10)
-                            .padding(.horizontal, 20)
-                            .background(Color.brown)
-                            .cornerRadius(8)
+                    Button("Next") {
+                        goToConfirm()
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.pixel)
                 }
             }
             .frame(height: 46)
@@ -244,7 +250,7 @@ struct PINEntryView: View {
             inputText = ""
             showResetButton = false
         } else {
-            viewModel.errorMessage = "입력한 암호가 일치하지 않습니다"
+            viewModel.errorMessage = "PINs do not match"
             inputText = ""
             showResetButton = true
             isFocused = true
@@ -262,29 +268,36 @@ struct PINEntryView: View {
     }
 }
 
-// MARK: - 비상 탈출 키 팝오버 뷰
+// MARK: - Escape Key Popover View
 
 struct EscapeKeyPopoverView: View {
     @ObservedObject var viewModel: KeyCombinationSettingsViewModel
 
+    private let pixelFont = "Silkscreen-Regular"
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // 제목
-            Label(String(localized: "key.settings"), systemImage: "keyboard")
-                .font(.headline)
+            // Title
+            HStack(spacing: 8) {
+                Image(systemName: "keyboard")
+                Text("Escape Key")
+                    .font(.custom(pixelFont, size: 14))
+            }
 
-            // 안내 문구
-            Text("key.info.description")
-                .font(.caption)
+            // Info text
+            Text("Set a key combination to unlock the screen in emergencies.")
+                .font(.custom(pixelFont, size: 10))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Divider()
+            Rectangle()
+                .fill(Color.coffeeBrown.opacity(0.3))
+                .frame(height: 2)
 
-            // 키 설정 뷰
+            // Key settings view
             KeyRecorderView(viewModel: viewModel)
         }
         .padding(16)
-        .frame(width: 300)
+        .frame(width: 320)
     }
 }

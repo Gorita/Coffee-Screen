@@ -462,6 +462,53 @@ func setupEmergencyEscape() {
 - 인증 5회 연속 실패 시 30초 대기 후 재시도 허용
 - 앱 응답 없음 10초 이상 지속 시 자동 잠금 해제 (선택적)
 
+## UI Components
+
+### 디자인 시스템
+
+Coffee-Screen은 8-bit 레트로 스타일의 커피 테마 디자인을 사용합니다.
+
+#### 폰트
+- **Silkscreen-Regular**: 메인 UI 폰트 (픽셀 스타일)
+- Press Start 2P, VT323: 대체 폰트 (번들에 포함)
+
+#### 컬러 팔레트
+```swift
+extension Color {
+    static let coffeeBrown = Color(red: 0.44, green: 0.26, blue: 0.13)  // 메인 브라운
+    static let coffeeCream = Color(red: 0.96, green: 0.93, blue: 0.88)  // 밝은 크림
+    static let coffeeLight = Color(red: 0.85, green: 0.75, blue: 0.62)  // 라이트 브라운
+    static let coffeeDark = Color(red: 0.30, green: 0.18, blue: 0.10)   // 다크 브라운
+}
+```
+
+### PixelShape
+
+8-bit 스타일의 모서리를 가진 커스텀 Shape입니다.
+
+```swift
+struct PixelShape: Shape {
+    var cornerSize: CGFloat = 4  // 모서리 노치 크기
+    // 각 모서리에 계단식 노치가 있는 Shape
+}
+```
+
+### PixelButtonStyle
+
+레트로 게임 스타일의 버튼:
+- **PixelButtonStyle**: Primary 버튼 (커피 브라운)
+- **PixelButtonStyleSecondary**: Secondary 버튼 (크림색)
+- **PixelButtonStyleLarge**: 큰 버튼 (Lock Screen용)
+- **pixelDestructive**: 삭제 버튼 (빨간색)
+
+```
+    ┌──────────┐
+   ╱            ╲    <- 픽셀 스타일 모서리
+  │   BUTTON    │
+   ╲            ╱
+    └──────────┘
+```
+
 ## 테스트 전략
 
 ### 단위 테스트 대상

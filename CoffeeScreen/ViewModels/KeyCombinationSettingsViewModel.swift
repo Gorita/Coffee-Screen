@@ -81,31 +81,31 @@ final class KeyCombinationSettingsViewModel: ObservableObject {
         clearMessages()
 
         guard let combination = recordedCombination else {
-            errorMessage = String(localized: "error.key.noInput")
+            errorMessage = "No key combination recorded"
             return
         }
 
         guard combination.isValid else {
-            errorMessage = String(localized: "error.key.tooSimple")
+            errorMessage = "Must include Cmd or Ctrl"
             return
         }
 
         if manager.setKeyCombination(combination) {
-            successMessage = String(localized: "key.setSuccess")
+            successMessage = "Key saved"
             isRecording = false
             recordedCombination = nil
             updateCurrentKeyDisplay()
         } else {
-            errorMessage = String(localized: "error.key.saveFailed")
+            errorMessage = "Failed to save key"
         }
     }
 
-    /// 기본값으로 복원
+    /// Reset to default
     func resetToDefault() {
         clearMessages()
 
         if manager.resetToDefault() {
-            successMessage = String(localized: "key.resetSuccess")
+            successMessage = "Reset to default"
             updateCurrentKeyDisplay()
         }
     }

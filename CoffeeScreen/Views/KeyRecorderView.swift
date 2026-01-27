@@ -1,9 +1,11 @@
 import SwiftUI
 import AppKit
 
-/// 비상 탈출 키 설정 뷰
+/// Emergency escape key settings view
 struct KeyRecorderView: View {
     @ObservedObject var viewModel: KeyCombinationSettingsViewModel
+
+    private let pixelFont = "Silkscreen-Regular"
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -13,16 +15,16 @@ struct KeyRecorderView: View {
                 displayView
             }
 
-            // 메시지 표시
+            // Message display
             if let error = viewModel.errorMessage {
                 Text(error)
-                    .font(.caption)
+                    .font(.custom(pixelFont, size: 10))
                     .foregroundStyle(.red)
             }
 
             if let success = viewModel.successMessage {
                 Text(success)
-                    .font(.caption)
+                    .font(.custom(pixelFont, size: 10))
                     .foregroundStyle(.green)
             }
         }
@@ -33,29 +35,29 @@ struct KeyRecorderView: View {
     private var displayView: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("key.current", tableName: nil, bundle: .main)
-                    .font(.subheadline)
+                Text("Current Key")
+                    .font(.custom(pixelFont, size: 10))
                     .foregroundStyle(.secondary)
 
                 Text(viewModel.currentKeyDisplay)
-                    .font(.system(.body, design: .monospaced))
-                    .fontWeight(.medium)
+                    .font(.custom(pixelFont, size: 12))
+                    .foregroundStyle(Color.coffeeDark)
             }
 
             Spacer()
 
             HStack(spacing: 8) {
-                Button(String(localized: "key.change")) {
+                Button("Change") {
                     viewModel.startRecording()
                 }
-                .buttonStyle(.bordered)
-                .focusEffectDisabled()
+                .buttonStyle(.pixel)
+                .fixedSize()
 
-                Button(String(localized: "key.reset")) {
+                Button("Reset") {
                     viewModel.resetToDefault()
                 }
-                .buttonStyle(.bordered)
-                .focusEffectDisabled()
+                .buttonStyle(.pixelSecondary)
+                .fixedSize()
             }
         }
     }
@@ -64,49 +66,52 @@ struct KeyRecorderView: View {
 
     private var recordingView: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("key.recording.instruction", tableName: nil, bundle: .main)
-                .font(.subheadline)
+            Text("Press new key combination")
+                .font(.custom(pixelFont, size: 10))
                 .foregroundStyle(.secondary)
 
-            // 키 캡처 영역
+            // Key capture area
             KeyCaptureView(viewModel: viewModel)
                 .frame(height: 44)
                 .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color(nsColor: .textBackgroundColor))
-                        .stroke(Color.accentColor, lineWidth: 2)
+                    Rectangle()
+                        .fill(Color.coffeeCream)
+                        .overlay(
+                            Rectangle()
+                                .strokeBorder(Color.coffeeBrown, lineWidth: 2)
+                        )
                 )
 
-            // 녹화된 키 표시
+            // Recorded key display
             if !viewModel.recordedKeyDisplay.isEmpty {
                 HStack {
                     Text(viewModel.recordedKeyDisplay)
-                        .font(.system(.body, design: .monospaced))
-                        .fontWeight(.medium)
-                        .foregroundStyle(.primary)
+                        .font(.custom(pixelFont, size: 14))
+                        .foregroundStyle(Color.coffeeDark)
 
                     if viewModel.bothShiftsPressed {
-                        Text("(양쪽 Shift)")
-                            .font(.caption)
+                        Text("(Both Shifts)")
+                            .font(.custom(pixelFont, size: 10))
                             .foregroundStyle(.secondary)
                     }
                 }
             }
 
-            // 버튼
+            // Buttons
             HStack(spacing: 8) {
-                Button(String(localized: "cancel")) {
+                Button("Cancel") {
                     viewModel.cancelRecording()
                 }
-                .buttonStyle(.bordered)
-                .focusEffectDisabled()
+                .buttonStyle(.pixelSecondary)
+                .fixedSize()
 
-                Button(String(localized: "save")) {
+                Button("Save") {
                     viewModel.saveRecordedCombination()
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.pixel)
                 .disabled(!viewModel.canSave)
-                .focusEffectDisabled()
+                .opacity(viewModel.canSave ? 1.0 : 0.5)
+                .fixedSize()
             }
         }
     }

@@ -1,7 +1,34 @@
 import SwiftUI
+import CoreText
 
 @main
 struct CoffeeScreenApp: App {
+
+    init() {
+        registerFonts()
+    }
+
+    private func registerFonts() {
+        let fonts = [
+            ("PressStart2P-Regular", "ttf"),
+            ("Silkscreen-Regular", "ttf"),
+            ("VT323-Regular", "ttf")
+        ]
+
+        for (name, ext) in fonts {
+            if let fontURL = Bundle.main.url(forResource: name, withExtension: ext) {
+                var error: Unmanaged<CFError>?
+                let success = CTFontManagerRegisterFontsForURL(fontURL as CFURL, .process, &error)
+                if !success {
+                    print("Failed to register font: \(name)")
+                } else {
+                    print("Registered font: \(name)")
+                }
+            } else {
+                print("Font not found: \(name).\(ext)")
+            }
+        }
+    }
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var mainViewModel = MainViewModel()
 
