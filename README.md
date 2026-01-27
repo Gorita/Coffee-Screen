@@ -36,12 +36,19 @@ Designed to work safely in enterprise security environments (MDM, DLP, antivirus
 ## Installation
 
 ### Direct Download
-Download the latest version from the [Releases](https://github.com/Gorita/Coffee-Screen/releases) page.
+Download the latest DMG from the [Releases](https://github.com/Gorita/Coffee-Screen/releases) page.
+
+> **Note**: This app is unsigned. On first launch, right-click the app → "Open" to bypass Gatekeeper.
 
 ### Build from Source
 ```bash
 git clone https://github.com/Gorita/Coffee-Screen.git
-cd coffee-screen
+cd Coffee-Screen
+
+# Quick release (build + DMG)
+./scripts/release.sh
+
+# Or open in Xcode
 open CoffeeScreen.xcodeproj
 ```
 
@@ -73,3 +80,4 @@ MIT License
 - [Tech Stack](docs/TECH_STACK.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Implementation Plan](docs/IMPLEMENTATION_PLAN.md)
+- [Deployment Guide](docs/DEPLOYMENT.md)

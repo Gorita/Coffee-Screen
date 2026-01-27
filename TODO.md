@@ -1,34 +1,45 @@
 # TODO
 
-## 기술 부채 및 확인 필요 사항
+## 완료된 항목
 
-### NSAppSleepDisabled 제거 가능 여부 확인
-`#power` `#app-nap` `#testing`
+### ~~NSAppSleepDisabled 제거~~ ✅
+`#power` `#app-nap`
 
-**현재 상태**: Info.plist에 `NSAppSleepDisabled = true` 설정 유지 중
+- Info.plist에서 `NSAppSleepDisabled` 제거 완료
+- IOPMAssertion으로 수면 방지 충분
+- 테스트 필요: 장시간 잠금 상태에서 App Nap 발생 여부
 
-**배경**:
-- `NSAppSleepDisabled`: App Nap 방지 (백그라운드 앱 절전 방지)
-- `IOPMAssertion`: 디스플레이/시스템 수면 방지 (현재 사용 중)
-- 두 설정은 서로 다른 역할을 함
+---
 
-**제거 가능 추정 근거**:
-- 잠금 상태 → 앱이 포그라운드 → App Nap 대상 아님
-- 잠금 해제 상태 → 절전 방지 필요 없음
+## 수동 테스트 필요
 
-**확인 필요한 테스트**:
-1. Info.plist에서 `NSAppSleepDisabled` 제거
-2. 앱 빌드 후 잠금 실행
-3. 장시간(30분 이상) 잠금 상태 유지
-4. 다음 항목 확인:
-   - [ ] 디스플레이가 꺼지지 않는지
-   - [ ] 앱이 App Nap에 의해 절전되지 않는지
-   - [ ] Touch ID / PIN 인증이 정상 동작하는지
-   - [ ] Activity Monitor에서 앱 상태가 "App Nap" 표시되지 않는지
+### Phase 6 수동 테스트 체크리스트
+`#testing` `#manual`
 
-**테스트 환경**:
-- macOS 버전: ___
-- 전원 어댑터 연결 상태: 연결 / 미연결
-- 에너지 설정: 기본값
+- [ ] 다중 모니터 환경 테스트
+- [ ] 모니터 연결/해제 테스트
+- [ ] 장시간 실행 테스트 (수면 방지 확인)
+- [ ] Clamshell 모드 테스트
+- [ ] 전체 잠금/해제 플로우 테스트
+- [ ] Touch ID 인증 테스트
+- [ ] PIN 인증 테스트
+- [ ] 비밀번호 폴백 테스트
+- [ ] 비상 탈출 키 테스트
+- [ ] 비상 탈출 키 변경 및 저장 테스트
 
-**결과**: (테스트 후 기록)
+### 엣지 케이스
+- [ ] Touch ID 5회 연속 실패 → 비밀번호 입력
+- [ ] 인증 중 모니터 해제 → Shield 재생성
+- [ ] 잠금 중 앱 강제 종료 시도 → Kiosk Mode가 차단
+
+---
+
+## 향후 개선 사항
+
+### 서명된 배포 (선택)
+`#deployment` `#signing`
+
+Apple Developer Program 가입 후:
+- [ ] Developer ID Application 인증서 설정
+- [ ] 공증(Notarization) 스크립트 추가
+- [ ] Gatekeeper 경고 없이 실행 확인

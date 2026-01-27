@@ -36,12 +36,19 @@ Coffee-Screen은 AI 학습, 대용량 데이터 렌더링 등 장시간 작업�
 ## 설치
 
 ### Direct Download
-[Releases](https://github.com/Gorita/Coffee-Screen/releases) 페이지에서 최신 버전을 다운로드하세요.
+[Releases](https://github.com/Gorita/Coffee-Screen/releases) 페이지에서 최신 DMG를 다운로드하세요.
+
+> **참고**: 서명되지 않은 앱입니다. 처음 실행 시 앱을 우클릭 → "열기"를 선택하세요.
 
 ### 빌드
 ```bash
 git clone https://github.com/Gorita/Coffee-Screen.git
-cd coffee-screen
+cd Coffee-Screen
+
+# 빠른 릴리스 (빌드 + DMG 생성)
+./scripts/release.sh
+
+# 또는 Xcode에서 열기
 open CoffeeScreen.xcodeproj
 ```
 
@@ -73,3 +80,4 @@ MIT License
 - [기술 스택](docs/TECH_STACK.md)
 - [아키텍처](docs/ARCHITECTURE.md)
 - [구현 계획](docs/IMPLEMENTATION_PLAN.md)
+- [배포 가이드](docs/DEPLOYMENT.md)
