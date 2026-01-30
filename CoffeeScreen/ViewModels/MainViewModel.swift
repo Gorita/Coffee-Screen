@@ -6,6 +6,7 @@ import SwiftUI
 @MainActor
 final class MainViewModel: ObservableObject {
     @Published var appState = AppState()
+    @Published var isStandaloneAwake: Bool = false
 
     // MARK: - Controllers
 
@@ -102,6 +103,32 @@ final class MainViewModel: ObservableObject {
 
         // 상태바 업데이트
         updateStatusBar()
+    }
+
+    /// 독립 Awake 모드 시작 (화면 잠금 없이 수면 방지만)
+    func startStandaloneAwake() {
+        // 이미 잠금 상태면 무시
+        guard !appState.isLocked else { return }
+
+        let result = powerController.startAwake()
+        switch result {
+        case .success:
+            isStandaloneAwake = true
+            appState.isAwake = true
+        case .failure(let error):
+            appState.lastError = error.localizedDescription
+            isStandaloneAwake = false
+        }
+    }
+
+    /// 독립 Awake 모드 해제
+    func stopStandaloneAwake() {
+        // 잠금 상태면 무시 (잠금 해제 시 자동으로 처리됨)
+        guard !appState.isLocked else { return }
+
+        powerController.stopAwake()
+        isStandaloneAwake = false
+        appState.isAwake = false
     }
 
     // MARK: - State Accessors

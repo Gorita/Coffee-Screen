@@ -6,8 +6,21 @@ struct MainView: View {
     @StateObject private var pinSettingsViewModel = PINSettingsViewModel()
     @StateObject private var keyCombinationViewModel = KeyCombinationSettingsViewModel()
     @State private var showEscapeKeyPopover = false
-    @State private var isAwake = false  // 테스트용
     @AppStorage("backgroundStyle") private var backgroundStyleRaw: Int = 0
+
+    /// Awake 상태 바인딩 (viewModel과 연결)
+    private var awakeBinding: Binding<Bool> {
+        Binding(
+            get: { viewModel.isStandaloneAwake },
+            set: { newValue in
+                if newValue {
+                    viewModel.startStandaloneAwake()
+                } else {
+                    viewModel.stopStandaloneAwake()
+                }
+            }
+        )
+    }
 
     private var backgroundStyle: BackgroundStyle {
         get { BackgroundStyle(rawValue: backgroundStyleRaw) ?? .vintageGrid }
@@ -107,8 +120,8 @@ struct MainView: View {
                     )
             )
 
-            // Awake Character (테스트용)
-            AwakeCharacterView(isAwake: $isAwake)
+            // Awake Character (시스템 수면 방지)
+            AwakeCharacterView(isAwake: awakeBinding)
                 .padding(.vertical, 8)
 
             // Lock button (shown only when PIN is set)
@@ -510,6 +523,68 @@ struct PixelArtBackground: View {
     }
 }
 
+// MARK: - Speech Bubble View
+
+struct SpeechBubbleView: View {
+    let text: String
+    private let pixelFont = "Silkscreen-Regular"
+
+    var body: some View {
+        ZStack(alignment: .bottomLeading) {
+            // 말풍선 본체
+            Text(text)
+                .font(.custom(pixelFont, size: 8))
+                .foregroundColor(.coffeeBrown)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 4)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.white)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .strokeBorder(Color.coffeeBrown.opacity(0.5), lineWidth: 1)
+                        )
+                )
+
+            // 말풍선 꼬리 (삼각형 - 윗선 없이)
+            TriangleFill()
+                .fill(Color.white)
+                .frame(width: 8, height: 6)
+                .offset(x: 8, y: 4)
+
+            TriangleTail()
+                .stroke(Color.coffeeBrown.opacity(0.5), lineWidth: 1)
+                .frame(width: 8, height: 6)
+                .offset(x: 8, y: 4)
+        }
+    }
+}
+
+// 말풍선 꼬리 Fill용 (닫힌 삼각형)
+struct TriangleFill: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        path.closeSubpath()
+        return path
+    }
+}
+
+// 말풍선 꼬리 Stroke용 (윗선 없음)
+struct TriangleTail: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        // 왼쪽 위에서 시작 -> 아래 중앙 -> 오른쪽 위 (윗선 없이)
+        path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        // closeSubpath() 없이 윗선 제거
+        return path
+    }
+}
+
 // MARK: - Awake Character View (마인크래프트 스타일)
 
 struct AwakeCharacterView: View {
@@ -551,14 +626,23 @@ struct AwakeCharacterView: View {
             ZStack {
                 HStack(alignment: .bottom, spacing: 20) {
                     // 스티브 (책상 포함해서 넓게)
-                    Canvas { context, size in
+                    ZStack(alignment: .topTrailing) {
+                        Canvas { context, size in
+                            if isAwake {
+                                drawAwakeSteve(context: context, size: size)
+                            } else {
+                                drawSleepySteve(context: context, size: size)
+                            }
+                        }
+                        .frame(width: 120, height: 70)
+
+                        // 말풍선 (Awake 상태일 때만)
                         if isAwake {
-                            drawAwakeSteve(context: context, size: size)
-                        } else {
-                            drawSleepySteve(context: context, size: size)
+                            SpeechBubbleView(text: "don't sleep!")
+                                .offset(x: -5, y: -8)
+                                .transition(.scale.combined(with: .opacity))
                         }
                     }
-                    .frame(width: 120, height: 70)
 
                     // 농민
                     Canvas { context, size in
@@ -585,7 +669,7 @@ struct AwakeCharacterView: View {
             }
             .frame(maxWidth: .infinity, alignment: .bottom)
             .padding(.horizontal, 16)
-            .padding(.top, 32)
+            .padding(.top, 40)
 
             // 커피잔 토글 버튼 (좌측 상단)
             Button {
