@@ -115,6 +115,7 @@ final class MainViewModel: ObservableObject {
         case .success:
             isStandaloneAwake = true
             appState.isAwake = true
+            updateStatusBar()
         case .failure(let error):
             appState.lastError = error.localizedDescription
             isStandaloneAwake = false
@@ -129,6 +130,7 @@ final class MainViewModel: ObservableObject {
         powerController.stopAwake()
         isStandaloneAwake = false
         appState.isAwake = false
+        updateStatusBar()
     }
 
     // MARK: - State Accessors
@@ -177,12 +179,21 @@ final class MainViewModel: ObservableObject {
             }
         }
 
+        statusBarController.onAwakeToggle = { [weak self] isOn in
+            guard let self else { return }
+            if isOn {
+                self.startStandaloneAwake()
+            } else {
+                self.stopStandaloneAwake()
+            }
+        }
+
         // 초기 상태 업데이트
         updateStatusBar()
     }
 
     /// 상태바 업데이트
     private func updateStatusBar() {
-        statusBarController.updateStatus(isLocked: appState.isLocked, isPINSet: isPINSet)
+        statusBarController.updateStatus(isLocked: appState.isLocked, isPINSet: isPINSet, isAwake: isStandaloneAwake)
     }
 }

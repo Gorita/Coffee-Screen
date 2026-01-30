@@ -545,6 +545,40 @@
         }
       }
     },
+    "menu.awake.on" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn On Awake Mode"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "깨우기 모드 켜기"
+          }
+        }
+      }
+    },
+    "menu.awake.off" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn Off Awake Mode"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "깨우기 모드 끄기"
+          }
+        }
+      }
+    },
     "key.settings" : {
       "extractionState" : "manual",
       "localizations" : {

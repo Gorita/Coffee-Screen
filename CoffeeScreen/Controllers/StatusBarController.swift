@@ -21,11 +21,17 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     /// PIN 설정 콜백
     var onOpenPINSettings: (() -> Void)?
 
+    /// Awake 토글 콜백
+    var onAwakeToggle: ((Bool) -> Void)?
+
     /// 현재 잠금 상태
     private var isLocked: Bool = false
 
     /// PIN 설정 여부
     private var isPINSet: Bool = false
+
+    /// Awake 상태
+    private var isAwake: Bool = false
 
     /// 아이콘이 회전된 상태인지
     private var isRotated: Bool = false
@@ -43,9 +49,10 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     // MARK: - Public Methods
 
     /// 상태 업데이트
-    func updateStatus(isLocked: Bool, isPINSet: Bool) {
+    func updateStatus(isLocked: Bool, isPINSet: Bool, isAwake: Bool = false) {
         self.isLocked = isLocked
         self.isPINSet = isPINSet
+        self.isAwake = isAwake
         updateMenu()
     }
 
@@ -246,6 +253,20 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         }
         menu.addItem(lockItem)
 
+        // Awake 메뉴 (잠금 해제 상태에서만)
+        if !isLocked {
+            let awakeTitle = isAwake
+                ? String(localized: "menu.awake.off")
+                : String(localized: "menu.awake.on")
+            let awakeItem = NSMenuItem(
+                title: awakeTitle,
+                action: #selector(toggleAwake),
+                keyEquivalent: "a"
+            )
+            awakeItem.target = self
+            menu.addItem(awakeItem)
+        }
+
         menu.addItem(NSMenuItem.separator())
 
         // PIN 설정 메뉴 (잠금 해제 상태에서만)
@@ -364,6 +385,12 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     @objc private func openPINSettings() {
         onOpenPINSettings?()
+    }
+
+    @objc private func toggleAwake() {
+        let newState = !isAwake
+        isAwake = newState
+        onAwakeToggle?(newState)
     }
 
     @objc private func quitApp() {
