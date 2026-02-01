@@ -17,10 +17,11 @@ Designed to work safely in enterprise security environments (MDM, DLP, antivirus
 ## Key Features
 
 - **Prevent System Sleep**: Keeps CPU and network active using IOKit Power Assertion
+- **Awake Mode**: Prevent sleep without locking the screen - perfect for monitoring tasks
 - **Screen Concealment**: Covers all monitors with black windows to protect work content
 - **Input Blocking**: Prevents system escape via Cmd+Tab, force quit, etc. using Kiosk Mode API
 - **Secure Unlock**: Authentication via Touch ID, password, or PIN
-- **Menu Bar Control**: Quick lock/unlock and settings access from the menu bar
+- **Menu Bar Control**: Quick lock/unlock, Awake mode toggle, and settings access from the menu bar
 
 ## Why Lightweight?
 
@@ -54,11 +55,17 @@ open CoffeeScreen.xcodeproj
 
 ## Usage
 
+### Lock Screen Mode
 1. Launch the app.
 2. **Set up a PIN** (4-8 digit number, required once).
 3. Click the **"Lock Screen"** button.
 4. The screen turns black and system sleep is prevented.
 5. To unlock: Click the screen and authenticate with **Touch ID**, **password**, or **PIN**.
+
+### Awake Mode (No PIN required)
+1. Toggle the coffee cup button in the app, or use the menu bar.
+2. System sleep is prevented while you can still use your Mac normally.
+3. Toggle off when done.
 
 ## Emergency Escape
 
