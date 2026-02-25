@@ -799,6 +799,23 @@
           }
         }
       }
+    },
+    "menu.about" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About Coffee-Screen"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coffee-Screen 정보"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

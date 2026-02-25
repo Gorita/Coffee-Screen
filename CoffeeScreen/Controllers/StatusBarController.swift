@@ -237,6 +237,17 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         // 현재 PIN 상태 직접 확인
         let currentPINSet = PINManager.shared.isPINSet
 
+        // About 메뉴 (항상 표시)
+        let aboutItem = NSMenuItem(
+            title: String(localized: "menu.about"),
+            action: #selector(showAbout),
+            keyEquivalent: ""
+        )
+        aboutItem.target = self
+        menu.addItem(aboutItem)
+
+        menu.addItem(NSMenuItem.separator())
+
         // 잠금/해제 메뉴
         let lockTitle = isLocked
             ? String(localized: "menu.unlock")
@@ -378,6 +389,19 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     }
 
     // MARK: - Actions
+
+    @objc private func showAbout() {
+        let name = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Coffee-Screen"
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""
+
+        let alert = NSAlert()
+        alert.messageText = name
+        alert.informativeText = "Version \(version) (\(build))"
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
 
     @objc private func toggleLock() {
         onLockToggle?()
