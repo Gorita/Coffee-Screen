@@ -31,7 +31,10 @@ final class KeyCombinationSettingsViewModel: ObservableObject {
 
     // MARK: - Dependencies
 
-    private let manager: KeyCombinationManager
+    private let currentProvider: () -> KeyCombination
+    private let saveAction: (KeyCombination) -> Bool
+    private let resetAction: () -> Bool
+    private let conflictChecker: ((KeyCombination) -> Bool)?
 
     // MARK: - Computed Properties
 
@@ -52,8 +55,28 @@ final class KeyCombinationSettingsViewModel: ObservableObject {
 
     // MARK: - Initialization
 
-    init(manager: KeyCombinationManager = .shared) {
-        self.manager = manager
+    init(
+        manager: KeyCombinationManager = .shared,
+        conflictChecker: ((KeyCombination) -> Bool)? = nil
+    ) {
+        self.currentProvider = { manager.currentKeyCombination }
+        self.saveAction = { manager.setKeyCombination($0) }
+        self.resetAction = { manager.resetToDefault() }
+        self.conflictChecker = conflictChecker
+        updateCurrentKeyDisplay()
+    }
+
+    /// 잠금 단축키 등 다른 manager를 사용하는 ViewModel 생성용
+    init(
+        currentProvider: @escaping () -> KeyCombination,
+        saveAction: @escaping (KeyCombination) -> Bool,
+        resetAction: @escaping () -> Bool,
+        conflictChecker: ((KeyCombination) -> Bool)? = nil
+    ) {
+        self.currentProvider = currentProvider
+        self.saveAction = saveAction
+        self.resetAction = resetAction
+        self.conflictChecker = conflictChecker
         updateCurrentKeyDisplay()
     }
 
@@ -90,7 +113,12 @@ final class KeyCombinationSettingsViewModel: ObservableObject {
             return
         }
 
-        if manager.setKeyCombination(combination) {
+        if let conflictChecker, conflictChecker(combination) {
+            errorMessage = "Conflicts with another shortcut"
+            return
+        }
+
+        if saveAction(combination) {
             successMessage = "Key saved"
             isRecording = false
             recordedCombination = nil
@@ -104,7 +132,7 @@ final class KeyCombinationSettingsViewModel: ObservableObject {
     func resetToDefault() {
         clearMessages()
 
-        if manager.resetToDefault() {
+        if resetAction() {
             successMessage = "Reset to default"
             updateCurrentKeyDisplay()
         }
@@ -140,7 +168,7 @@ final class KeyCombinationSettingsViewModel: ObservableObject {
 
     /// 현재 키 표시 업데이트
     private func updateCurrentKeyDisplay() {
-        currentKeyDisplay = manager.currentKeyCombination.displayString
+        currentKeyDisplay = currentProvider().displayString
     }
 
     /// 메시지 초기화

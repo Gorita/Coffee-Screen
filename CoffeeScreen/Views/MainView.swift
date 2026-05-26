@@ -4,7 +4,19 @@ import SwiftUI
 struct MainView: View {
     @EnvironmentObject var viewModel: MainViewModel
     @StateObject private var pinSettingsViewModel = PINSettingsViewModel()
-    @StateObject private var keyCombinationViewModel = KeyCombinationSettingsViewModel()
+    @StateObject private var keyCombinationViewModel = KeyCombinationSettingsViewModel(
+        conflictChecker: { candidate in
+            candidate.conflicts(with: LockHotkeyManager.shared.currentHotkey)
+        }
+    )
+    @StateObject private var lockHotkeyViewModel = KeyCombinationSettingsViewModel(
+        currentProvider: { LockHotkeyManager.shared.currentHotkey },
+        saveAction: { LockHotkeyManager.shared.setHotkey($0) },
+        resetAction: { LockHotkeyManager.shared.resetToDefault() },
+        conflictChecker: { candidate in
+            candidate.conflicts(with: KeyCombinationManager.shared.currentKeyCombination)
+        }
+    )
     @State private var showEscapeKeyPopover = false
     @AppStorage("backgroundStyle") private var backgroundStyleRaw: Int = 0
 
@@ -70,7 +82,10 @@ struct MainView: View {
                         .buttonStyle(.pixelIcon)
                         .help("Escape Key Settings")
                         .popover(isPresented: $showEscapeKeyPopover, arrowEdge: .bottom) {
-                            EscapeKeyPopoverView(viewModel: keyCombinationViewModel)
+                            KeyboardShortcutsPopoverView(
+                                escapeKeyViewModel: keyCombinationViewModel,
+                                lockHotkeyViewModel: lockHotkeyViewModel
+                            )
                         }
                     }
                 }
@@ -307,37 +322,54 @@ struct PINEntryView: View {
     }
 }
 
-// MARK: - Escape Key Popover View
+// MARK: - Keyboard Shortcuts Popover View
 
-struct EscapeKeyPopoverView: View {
-    @ObservedObject var viewModel: KeyCombinationSettingsViewModel
+struct KeyboardShortcutsPopoverView: View {
+    @ObservedObject var escapeKeyViewModel: KeyCombinationSettingsViewModel
+    @ObservedObject var lockHotkeyViewModel: KeyCombinationSettingsViewModel
 
     private let pixelFont = "Silkscreen-Regular"
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Title
-            HStack(spacing: 8) {
-                Image(systemName: "keyboard")
-                Text("Escape Key")
-                    .font(.custom(pixelFont, size: 14))
-            }
+        VStack(alignment: .leading, spacing: 20) {
+            // Lock shortcut section
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: "lock.fill")
+                    Text("Lock Shortcut")
+                        .font(.custom(pixelFont, size: 14))
+                }
 
-            // Info text
-            Text("Set a key combination to unlock the screen in emergencies.")
-                .font(.custom(pixelFont, size: 10))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+                Text("Press this combination anywhere to lock the screen.")
+                    .font(.custom(pixelFont, size: 10))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                KeyRecorderView(viewModel: lockHotkeyViewModel)
+            }
 
             Rectangle()
                 .fill(Color.coffeeBrown.opacity(0.3))
                 .frame(height: 2)
 
-            // Key settings view
-            KeyRecorderView(viewModel: viewModel)
+            // Escape key section
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: "keyboard")
+                    Text("Escape Key")
+                        .font(.custom(pixelFont, size: 14))
+                }
+
+                Text("Set a key combination to unlock the screen in emergencies.")
+                    .font(.custom(pixelFont, size: 10))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                KeyRecorderView(viewModel: escapeKeyViewModel)
+            }
         }
         .padding(16)
-        .frame(width: 320)
+        .frame(width: 340)
     }
 }
 

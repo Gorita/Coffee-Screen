@@ -57,6 +57,14 @@ struct KeyCombination: Codable, Equatable {
         modifierFlags.contains(.command) || modifierFlags.contains(.control)
     }
 
+    /// 다른 키 조합과 같은 핫키로 충돌하는지 확인
+    /// (같은 키 코드 + 같은 핵심 modifier 조합이면 충돌)
+    func conflicts(with other: KeyCombination) -> Bool {
+        let core: NSEvent.ModifierFlags = [.shift, .control, .option, .command]
+        return keyCode == other.keyCode
+            && modifierFlags.intersection(core) == other.modifierFlags.intersection(core)
+    }
+
     // MARK: - Initialization
 
     init(

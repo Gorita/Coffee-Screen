@@ -14,6 +14,7 @@ final class MainViewModel: ObservableObject {
     private let kioskEnforcer = KioskEnforcer()
     private let shieldWindowController = ShieldWindowController()
     private let emergencyEscapeHandler = EmergencyEscapeHandler()
+    private let lockHotkeyHandler = LockHotkeyHandler()
     private let statusBarController = StatusBarController()
     private let pinManager = PINManager.shared
 
@@ -31,6 +32,7 @@ final class MainViewModel: ObservableObject {
 
     init() {
         setupEmergencyEscape()
+        setupLockHotkey()
         setupStatusBar()
         observePINChanges()
     }
@@ -156,6 +158,17 @@ final class MainViewModel: ObservableObject {
             guard let self, self.appState.isLocked else { return }
             self.stopLock()
         }
+    }
+
+    /// 잠금 단축키 핸들러 설정 및 등록
+    private func setupLockHotkey() {
+        lockHotkeyHandler.onTrigger = { [weak self] in
+            guard let self else { return }
+            guard !self.appState.isLocked else { return }
+            guard self.isPINSet else { return }
+            self.startLock()
+        }
+        lockHotkeyHandler.start()
     }
 
     /// 상태바 컨트롤러 설정

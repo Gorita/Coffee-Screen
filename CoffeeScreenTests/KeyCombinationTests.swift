@@ -4,6 +4,33 @@ import AppKit
 
 final class KeyCombinationTests: XCTestCase {
 
+    // MARK: - Conflicts Tests
+
+    func testConflicts_SameKeyCodeAndModifiers_ReturnsTrue() {
+        let a = KeyCombination(keyCode: 37, keyCharacter: "L", modifierFlags: [.command, .control])
+        let b = KeyCombination(keyCode: 37, keyCharacter: "L", modifierFlags: [.command, .control])
+        XCTAssertTrue(a.conflicts(with: b))
+    }
+
+    func testConflicts_DifferentKeyCode_ReturnsFalse() {
+        let a = KeyCombination(keyCode: 37, keyCharacter: "L", modifierFlags: [.command, .control])
+        let b = KeyCombination(keyCode: 14, keyCharacter: "E", modifierFlags: [.command, .control])
+        XCTAssertFalse(a.conflicts(with: b))
+    }
+
+    func testConflicts_DifferentModifiers_ReturnsFalse() {
+        let a = KeyCombination(keyCode: 37, keyCharacter: "L", modifierFlags: [.command, .control])
+        let b = KeyCombination(keyCode: 37, keyCharacter: "L", modifierFlags: [.command, .option])
+        XCTAssertFalse(a.conflicts(with: b))
+    }
+
+    func testConflicts_IgnoresRequiresBothShifts() {
+        // 양쪽 shift vs 단일 shift는 시스템 핫키 레벨에서 동일하게 인식될 위험
+        let escape = KeyCombination(keyCode: 37, keyCharacter: "L", modifierFlags: [.shift, .command], requiresBothShifts: true)
+        let lock = KeyCombination(keyCode: 37, keyCharacter: "L", modifierFlags: [.shift, .command], requiresBothShifts: false)
+        XCTAssertTrue(escape.conflicts(with: lock))
+    }
+
     // MARK: - Display String Tests
 
     func testDisplayString_WithDefaultCombination_ShowsCorrectFormat() {
