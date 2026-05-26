@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import SwiftUI
 
@@ -147,5 +148,29 @@ final class ShieldViewModel: ObservableObject {
         pinInput = ""
         showPINInput = false
         hasTouchIDBeenAttempted = false
+    }
+
+    /// Mac 종료 시도
+    func shutdownMac() {
+        let alert = NSAlert()
+        
+        let isKorean = Locale.current.language.languageCode?.identifier == "ko"
+        alert.messageText = isKorean ? "시스템 종료" : "Shut Down System"
+        alert.informativeText = isKorean 
+            ? "정말로 Mac을 종료하시겠습니까? 저장하지 않은 작업이 모두 손실될 수 있습니다." 
+            : "Are you sure you want to shut down your Mac? You might lose unsaved work."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: isKorean ? "종료" : "Shut Down")
+        alert.addButton(withTitle: isKorean ? "취소" : "Cancel")
+        
+        NSApp.activate(ignoringOtherApps: true)
+        
+        if alert.runModal() == .alertFirstButtonReturn {
+            let source = "tell application \"System Events\" to shut down"
+            if let script = NSAppleScript(source: source) {
+                var error: NSDictionary?
+                script.executeAndReturnError(&error)
+            }
+        }
     }
 }

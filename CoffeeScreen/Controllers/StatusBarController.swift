@@ -405,6 +405,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     // MARK: - Actions
 
     @objc private func showAbout() {
+        NSApp.activate(ignoringOtherApps: true)
         let name = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Coffee-Screen"
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""

@@ -71,9 +71,21 @@ struct UnlockView: View {
                     }
                     .foregroundStyle(.white.opacity(0.7))
                 }
-                .buttonStyle(.plain)
-                .padding(.top, 8)
             }
+
+            // Emergency Shutdown Button
+            Button(action: {
+                viewModel.shutdownMac()
+            }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "power")
+                    Text(Locale.current.identifier.hasPrefix("ko") ? "Mac 종료" : "Shut Down Mac")
+                        .font(.custom(pixelFont, size: 10))
+                }
+                .foregroundStyle(.red.opacity(0.8))
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 16)
         }
         .padding(40)
     }
