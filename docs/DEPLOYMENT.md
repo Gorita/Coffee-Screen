@@ -1,5 +1,8 @@
 # 배포 가이드
 
+> **Sparkle 자동 업데이트로 새 버전 릴리스하는 절차는 [RELEASE.md](RELEASE.md)를 참고하세요.**
+> 이 문서는 빌드/DMG 생성 같은 공통 절차를 다룹니다.
+
 ## 개요
 
 Coffee-Screen은 **Direct Distribution** 방식으로 배포됩니다.

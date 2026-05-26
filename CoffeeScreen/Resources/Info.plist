@@ -28,5 +28,13 @@
 	<string></string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>SUFeedURL</key>
+	<string>https://github.com/Gorita/coffee-screen/releases/latest/download/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>r7G7qPl0ex2xKw562WGzpAIFC+I33JC9nyxcweEFmNE=</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>86400</integer>
 </dict>
 </plist>

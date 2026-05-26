@@ -6,6 +6,11 @@ options:
   xcodeVersion: "15.0"
   generateEmptyDirectories: true
 
+packages:
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: 2.0.0
+
 settings:
   base:
     MARKETING_VERSION: "1.1.1"
@@ -30,6 +35,8 @@ targets:
       - path: CoffeeScreen
         excludes:
           - "**/.DS_Store"
+    dependencies:
+      - package: Sparkle
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.gorita.coffee-screen
@@ -54,6 +61,10 @@ targets:
         NSMainStoryboardFile: ""
         NSPrincipalClass: NSApplication
         LSUIElement: false
+        SUFeedURL: https://github.com/Gorita/coffee-screen/releases/latest/download/appcast.xml
+        SUPublicEDKey: r7G7qPl0ex2xKw562WGzpAIFC+I33JC9nyxcweEFmNE=
+        SUEnableAutomaticChecks: true
+        SUScheduledCheckInterval: 86400
     entitlements:
       path: CoffeeScreen/Resources/CoffeeScreen.entitlements
       properties:

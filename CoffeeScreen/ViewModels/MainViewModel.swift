@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import Sparkle
 import SwiftUI
 
 /// 메인 화면의 ViewModel
@@ -17,6 +18,11 @@ final class MainViewModel: ObservableObject {
     private let lockHotkeyHandler = LockHotkeyHandler()
     private let statusBarController = StatusBarController()
     private let pinManager = PINManager.shared
+    private let updaterController = SPUStandardUpdaterController(
+        startingUpdater: true,
+        updaterDelegate: nil,
+        userDriverDelegate: nil
+    )
 
     // MARK: - ViewModels
 
@@ -199,6 +205,10 @@ final class MainViewModel: ObservableObject {
             } else {
                 self.stopStandaloneAwake()
             }
+        }
+
+        statusBarController.onCheckForUpdates = { [weak self] in
+            self?.updaterController.checkForUpdates(nil)
         }
 
         // 초기 상태 업데이트

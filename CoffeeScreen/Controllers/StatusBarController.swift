@@ -24,6 +24,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     /// Awake 토글 콜백
     var onAwakeToggle: ((Bool) -> Void)?
 
+    /// 업데이트 확인 콜백
+    var onCheckForUpdates: (() -> Void)?
+
     /// 현재 잠금 상태
     private var isLocked: Bool = false
 
@@ -246,6 +249,17 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         aboutItem.target = self
         menu.addItem(aboutItem)
 
+        // 업데이트 확인 (잠금 해제 상태에서만)
+        if !isLocked {
+            let updateItem = NSMenuItem(
+                title: String(localized: "menu.checkForUpdates"),
+                action: #selector(checkForUpdates),
+                keyEquivalent: ""
+            )
+            updateItem.target = self
+            menu.addItem(updateItem)
+        }
+
         menu.addItem(NSMenuItem.separator())
 
         // 잠금/해제 메뉴
@@ -405,6 +419,10 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     @objc private func toggleLock() {
         onLockToggle?()
+    }
+
+    @objc private func checkForUpdates() {
+        onCheckForUpdates?()
     }
 
     @objc private func openPINSettings() {
