@@ -59,6 +59,7 @@ struct MainView: View {
 
                 Text("Coffee-Screen")
                     .font(.custom(pixelFont, size: 20))
+                    .foregroundStyle(Color.coffeeDark)
             }
 
             // PIN settings section
@@ -69,6 +70,7 @@ struct MainView: View {
                         Text("PIN Settings")
                             .font(.custom(pixelFont, size: 14))
                     }
+                    .foregroundStyle(Color.coffeeDark)
 
                     Spacer()
 
@@ -210,7 +212,7 @@ struct PINEntryView: View {
             // Status text
             Text(isConfirmMode ? "Confirm your PIN" : "Enter new PIN (4-8 digits)")
                 .font(.custom(pixelFont, size: 10))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.coffeeDark.opacity(0.7))
 
             // PIN dots display
             HStack(spacing: 10) {
@@ -339,10 +341,11 @@ struct KeyboardShortcutsPopoverView: View {
                     Text("Lock Shortcut")
                         .font(.custom(pixelFont, size: 14))
                 }
+                .foregroundStyle(Color.coffeeDark)
 
                 Text("Press this combination anywhere to lock the screen.")
                     .font(.custom(pixelFont, size: 10))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.coffeeDark.opacity(0.7))
                     .fixedSize(horizontal: false, vertical: true)
 
                 KeyRecorderView(viewModel: lockHotkeyViewModel)
@@ -359,10 +362,11 @@ struct KeyboardShortcutsPopoverView: View {
                     Text("Escape Key")
                         .font(.custom(pixelFont, size: 14))
                 }
+                .foregroundStyle(Color.coffeeDark)
 
                 Text("Set a key combination to unlock the screen in emergencies.")
                     .font(.custom(pixelFont, size: 10))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.coffeeDark.opacity(0.7))
                     .fixedSize(horizontal: false, vertical: true)
 
                 KeyRecorderView(viewModel: escapeKeyViewModel)

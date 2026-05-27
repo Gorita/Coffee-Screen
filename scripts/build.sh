@@ -55,6 +55,15 @@ echo_step "Copying app..."
 mkdir -p "${BUILD_DIR}/export"
 cp -R "${BUILD_DIR}/DerivedData/Build/Products/Release/${APP_NAME}.app" "${BUILD_DIR}/export/"
 
+# Compile unthinned CoffeeIcon.icns manually to bypass Xcode asset thinning
+echo_step "Compiling unthinned CoffeeIcon.icns..."
+ICONSET_DIR="${BUILD_DIR}/CoffeeIcon.iconset"
+rm -rf "${ICONSET_DIR}"
+mkdir -p "${ICONSET_DIR}"
+cp "${PROJECT_DIR}/CoffeeScreen/Resources/Assets.xcassets/CoffeeIcon.appiconset/icon_"* "${ICONSET_DIR}/"
+iconutil -c icns "${ICONSET_DIR}" -o "${BUILD_DIR}/export/${APP_NAME}.app/Contents/Resources/CoffeeIcon.icns"
+rm -rf "${ICONSET_DIR}"
+
 APP_PATH="${BUILD_DIR}/export/${APP_NAME}.app"
 
 echo ""
