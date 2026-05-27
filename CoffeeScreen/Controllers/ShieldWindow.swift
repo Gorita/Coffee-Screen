@@ -29,6 +29,10 @@ final class ShieldWindow: NSWindow {
         isOpaque = true
         hasShadow = false
 
+        // 다크 모드 고정: OS 라이트/다크 설정과 무관하게 잠금화면 내
+        // 시스템 컨트롤(PIN 입력 필드 등)이 검은 배경과 일관되게 표시되도록
+        appearance = NSAppearance(named: .darkAqua)
+
         // 모든 Space에서 표시
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
