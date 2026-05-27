@@ -104,6 +104,10 @@ echo_header "Step 1: Build"
 echo_header "Step 2: Create DMG"
 "${SCRIPTS_DIR}/create-dmg.sh"
 
+# Step 3: Generate Appcast
+echo_header "Step 3: Generate Appcast"
+"${SCRIPTS_DIR}/generate-appcast.sh"
+
 # Done
 echo_header "Release Complete!"
 
@@ -112,7 +116,11 @@ VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "${APP_P
 
 echo "Version: ${VERSION}"
 echo "DMG:     build/Coffee-Screen-${VERSION}.dmg"
+echo "Appcast: build/appcast.xml"
 echo ""
 echo "Note: This app is unsigned. Users will need to:"
 echo "  1. Right-click the app → Open"
 echo "  2. Or allow in System Settings → Privacy & Security"
+echo ""
+echo "To publish to GitHub Releases:"
+echo "  gh release create v${VERSION} build/Coffee-Screen-${VERSION}.dmg build/appcast.xml --title \"v${VERSION}\" --notes \"Release notes here\""
