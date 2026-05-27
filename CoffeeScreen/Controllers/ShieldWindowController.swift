@@ -7,11 +7,19 @@ final class ShieldWindowController {
 
     // MARK: - Properties
 
-    /// 생성된 Shield 윈도우 목록
-    private var shieldWindows: [ShieldWindow] = []
+    /// displayID → Shield 윈도우 매핑
+    /// (어느 화면이 이미 덮였는지 추적해서 증분 보충/정리가 가능하도록)
+    private var shieldWindows: [CGDirectDisplayID: ShieldWindow] = [:]
 
     /// 모니터 변경 감지 옵저버 (nonisolated access를 위해 별도 저장)
     private nonisolated(unsafe) var screenObserver: NSObjectProtocol?
+
+    /// 잠금 중 화면 구성을 주기적으로 재확인하는 타이머
+    /// (KVM 전환·hot-plug 등으로 didChangeScreenParameters 알림이 누락되는 경우 대비)
+    private var pollingTimer: Timer?
+
+    /// 화면 재확인 주기 (초)
+    private static let pollingInterval: TimeInterval = 1.5
 
     /// 현재 사용 중인 ViewModel
     private weak var currentViewModel: ShieldViewModel?
@@ -50,21 +58,52 @@ final class ShieldWindowController {
 
         currentViewModel = viewModel
 
-        for screen in NSScreen.screens {
-            let window = createShieldWindow(for: screen, with: viewModel)
-            window.orderFrontRegardless()
-            shieldWindows.append(window)
-        }
+        // 현재 화면 구성으로 쉴드 구성
+        syncShields()
+
+        // 잠금 동안 화면 변화를 계속 추적하도록 폴링 시작
+        startPolling()
     }
 
     /// 모든 Shield 윈도우 닫기
     func hideShields() {
-        shieldWindows.forEach { $0.close() }
+        stopPolling()
+        shieldWindows.values.forEach { $0.close() }
         shieldWindows.removeAll()
         currentViewModel = nil
     }
 
     // MARK: - Private Methods
+
+    /// 현재 화면 구성과 쉴드 윈도우를 동기화한다.
+    /// - 쉴드가 없는 화면에는 윈도우를 추가
+    /// - 사라진 화면의 윈도우는 정리
+    /// - 남아있는 화면은 frame을 갱신 (arrangement 변경 대비)
+    private func syncShields() {
+        guard let viewModel = currentViewModel else { return }
+
+        let currentScreens = NSScreen.screens
+        let currentIDs = Set(currentScreens.compactMap { $0.displayID })
+
+        // 1. 사라진 화면의 쉴드 정리
+        for (id, window) in shieldWindows where !currentIDs.contains(id) {
+            window.close()
+            shieldWindows.removeValue(forKey: id)
+        }
+
+        // 2. 새 화면 추가 / 기존 화면 frame 갱신
+        for screen in currentScreens {
+            guard let id = screen.displayID else { continue }
+
+            if let existing = shieldWindows[id] {
+                existing.setFrame(screen.frame, display: true)
+            } else {
+                let window = createShieldWindow(for: screen, with: viewModel)
+                window.orderFrontRegardless()
+                shieldWindows[id] = window
+            }
+        }
+    }
 
     /// 특정 화면에 대한 Shield 윈도우 생성
     private func createShieldWindow(for screen: NSScreen, with viewModel: ShieldViewModel) -> ShieldWindow {
@@ -75,6 +114,22 @@ final class ShieldWindowController {
         window.setContent(shieldView)
 
         return window
+    }
+
+    /// 화면 재확인 폴링 시작
+    private func startPolling() {
+        stopPolling()
+        pollingTimer = Timer.scheduledTimer(withTimeInterval: Self.pollingInterval, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.syncShields()
+            }
+        }
+    }
+
+    /// 화면 재확인 폴링 중지
+    private func stopPolling() {
+        pollingTimer?.invalidate()
+        pollingTimer = nil
     }
 
     /// 모니터 변경 감지 설정
@@ -92,19 +147,18 @@ final class ShieldWindowController {
         }
     }
 
-    /// 모니터 변경 처리
+    /// 모니터 변경 처리 (증분 동기화)
     private func handleScreenChange() {
-        guard isShowing, let viewModel = currentViewModel else { return }
+        guard isShowing else { return }
+        syncShields()
+    }
+}
 
-        // 기존 윈도우 닫기
-        shieldWindows.forEach { $0.close() }
-        shieldWindows.removeAll()
+// MARK: - NSScreen displayID
 
-        // 새로운 화면 구성으로 재생성
-        for screen in NSScreen.screens {
-            let window = createShieldWindow(for: screen, with: viewModel)
-            window.orderFrontRegardless()
-            shieldWindows.append(window)
-        }
+private extension NSScreen {
+    /// 화면의 CoreGraphics displayID (화면 식별용)
+    var displayID: CGDirectDisplayID? {
+        (deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value
     }
 }
