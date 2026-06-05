@@ -10,6 +10,9 @@ final class KioskEnforcer {
     /// 키오스크 모드 활성화 전 옵션 (복구용)
     private var previousOptions: NSApplication.PresentationOptions = []
 
+    /// 키오스크 모드 활성화 전 활성화 정책 (복구용)
+    private var previousActivationPolicy: NSApplication.ActivationPolicy = .regular
+
     /// 현재 키오스크 모드가 활성화되어 있는지 여부
     private(set) var isLocked: Bool = false
 
@@ -34,8 +37,15 @@ final class KioskEnforcer {
     func lockUI() {
         guard !isLocked else { return }
 
-        // 현재 옵션 저장 (복구용)
+        // 현재 옵션/정책 저장 (복구용)
         previousOptions = NSApp.presentationOptions
+        previousActivationPolicy = NSApp.activationPolicy()
+
+        // 잠금 동안 .accessory 정책으로 전환.
+        // .regular 정책에서는 보조/외부 디스플레이의 borderless shield 윈도우가
+        // 합성되지 않아 확장 모드에서 두 번째 모니터가 안 덮이는 문제가 있다.
+        // .accessory로 전환하면 모든 디스플레이가 정상적으로 덮인다.
+        NSApp.setActivationPolicy(.accessory)
 
         // 키오스크 옵션 적용
         NSApp.presentationOptions = kioskOptions
@@ -55,6 +65,9 @@ final class KioskEnforcer {
 
         // 이전 옵션으로 복구
         NSApp.presentationOptions = previousOptions
+
+        // 이전 활성화 정책으로 복구
+        NSApp.setActivationPolicy(previousActivationPolicy)
 
         isLocked = false
     }
