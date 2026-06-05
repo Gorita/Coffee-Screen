@@ -404,15 +404,25 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     // MARK: - Actions
 
+    /// About 다이얼로그에 표시할 기여자 목록 (추가 시 이곳에 한 명씩)
+    private static let contributors: [String] = [
+        "Heri"
+    ]
+
     @objc private func showAbout() {
         NSApp.activate(ignoringOtherApps: true)
         let name = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Coffee-Screen"
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""
 
+        var info = "Version \(version) (\(build))"
+        if !Self.contributors.isEmpty {
+            info += "\n\nThanks to.\n" + Self.contributors.joined(separator: "\n")
+        }
+
         let alert = NSAlert()
         alert.messageText = name
-        alert.informativeText = "Version \(version) (\(build))"
+        alert.informativeText = info
         alert.alertStyle = .informational
         alert.addButton(withTitle: "OK")
         alert.runModal()
