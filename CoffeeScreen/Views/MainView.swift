@@ -78,15 +78,12 @@ struct MainView: View {
                     // Action buttons
                     HStack(spacing: 8) {
                         Button {
-                            showLockScreenEditor.toggle()
+                            LockScreenEditorWindowController.shared.startEditing()
                         } label: {
                             Image(systemName: "paintpalette.fill")
                         }
                         .buttonStyle(.pixelIcon)
                         .help("Customize Lock Screen")
-                        .sheet(isPresented: $showLockScreenEditor) {
-                            LockScreenEditorView()
-                        }
 
                         if pinSettingsViewModel.isPINSet {
                             Button {

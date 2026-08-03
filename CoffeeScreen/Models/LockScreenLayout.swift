@@ -5,8 +5,6 @@ import SwiftUI
 enum BackgroundType: String, Codable, CaseIterable, Identifiable {
     case solidColor
     case customImage
-    case vintageGrid
-    case pixelArt
 
     var id: String { rawValue }
 
@@ -16,10 +14,23 @@ enum BackgroundType: String, Codable, CaseIterable, Identifiable {
             return String(localized: "Background.SolidColor", defaultValue: "Solid Color")
         case .customImage:
             return String(localized: "Background.CustomImage", defaultValue: "Custom Image")
-        case .vintageGrid:
-            return String(localized: "Background.VintageGrid", defaultValue: "Vintage Grid")
-        case .pixelArt:
-            return String(localized: "Background.PixelArt", defaultValue: "Pixel Art")
+        }
+    }
+}
+
+/// 이미지 배경 맞춤 모드 (Fill / Fit)
+enum ImageContentMode: String, Codable, CaseIterable, Identifiable {
+    case fill
+    case fit
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .fill:
+            return String(localized: "ContentMode.Fill", defaultValue: "Fill Screen")
+        case .fit:
+            return String(localized: "ContentMode.Fit", defaultValue: "Fit Screen")
         }
     }
 }
@@ -44,6 +55,26 @@ enum UnlockWindowStyle: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+/// 스티커 테두리 / 프레임 스타일
+enum StickerStyle: String, Codable, CaseIterable, Identifiable {
+    case whiteBorder
+    case clean
+    case polaroid
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .whiteBorder:
+            return String(localized: "StickerStyle.WhiteBorder", defaultValue: "White Border")
+        case .clean:
+            return String(localized: "StickerStyle.Clean", defaultValue: "Clean Image")
+        case .polaroid:
+            return String(localized: "StickerStyle.Polaroid", defaultValue: "Polaroid Frame")
+        }
+    }
+}
+
 /// 인증 창 위치 및 카드 모양 설정
 struct UnlockWindowConfig: Codable, Equatable {
     var style: UnlockWindowStyle = .glassmorphic
@@ -52,11 +83,15 @@ struct UnlockWindowConfig: Codable, Equatable {
     var opacity: Double = 0.45
 }
 
-/// 락스크린에 추가 배치되는 스티커/이미지 아이템
+/// 락스크린에 추가 배치되는 스티커/이미지 아이템 (커스텀 이미지 및 프리셋 아이콘 겸용)
 struct StickerItem: Codable, Identifiable, Equatable {
     var id: UUID = UUID()
     /// 앱 샌드박스 내부 저장 이미지 파일 경로 (절대경로 또는 상대 파일명)
-    var imagePath: String
+    var imagePath: String? = nil
+    /// 프리셋 SF Symbol 아이콘 이름
+    var systemIconName: String? = nil
+    /// 스티커 표시 이름
+    var name: String = "Sticker"
     /// X 좌표
     var x: CGFloat = 0
     /// Y 좌표
@@ -65,6 +100,10 @@ struct StickerItem: Codable, Identifiable, Equatable {
     var scale: CGFloat = 1.0
     /// 회전 각도 (degrees)
     var rotation: Double = 0.0
+    /// 스티커 테두리/프레임 스타일
+    var style: StickerStyle = .whiteBorder
+    /// AI 자동 배경 제거(누끼) 적용 여부
+    var isBackgroundRemoved: Bool = false
 }
 
 /// 락스크린 위젯 설정 (시계, 문구 등)
@@ -83,9 +122,19 @@ struct WidgetConfig: Codable, Equatable {
 
 /// 락스크린 전체 설정을 담는 데이터 구조체
 struct LockScreenLayout: Codable, Equatable {
-    var backgroundType: BackgroundType = .vintageGrid
+    var backgroundType: BackgroundType = .solidColor
     var backgroundColorHex: String = "#000000"
     var backgroundImagePath: String?
+
+    /// 최근 사용/등록된 커스텀 이미지 히스토리 경로들 (최대 6개)
+    var recentImagePaths: [String] = []
+
+    /// 배경 이미지 Crop / Alignment 설정
+    var imageContentMode: ImageContentMode = .fill
+    var imageScale: CGFloat = 1.0
+    var imageOffsetX: CGFloat = 0
+    var imageOffsetY: CGFloat = 0
+
     var stickers: [StickerItem] = []
 
     var unlockWindowConfig: UnlockWindowConfig = UnlockWindowConfig()

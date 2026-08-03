@@ -43,24 +43,23 @@ struct ShieldView: View {
 
     @ViewBuilder
     private func backgroundLayer(size: CGSize) -> some View {
-        switch settingsManager.layout.backgroundType {
+        let layout = settingsManager.layout
+        switch layout.backgroundType {
         case .solidColor:
-            settingsManager.layout.backgroundColor
+            layout.backgroundColor
         case .customImage:
-            if let bgPath = settingsManager.layout.backgroundImagePath,
+            if let bgPath = layout.backgroundImagePath,
                let nsImage = settingsManager.loadImage(from: bgPath) {
                 Image(nsImage: nsImage)
                     .resizable()
-                    .aspectRatio(contentMode: .fill)
+                    .aspectRatio(contentMode: layout.imageContentMode == .fill ? .fill : .fit)
+                    .scaleEffect(layout.imageScale)
+                    .offset(x: layout.imageOffsetX, y: layout.imageOffsetY)
                     .frame(width: size.width, height: size.height)
                     .clipped()
             } else {
                 Color.black
             }
-        case .vintageGrid:
-            VintageGridBackground()
-        case .pixelArt:
-            PixelArtBackground()
         }
     }
 
@@ -69,14 +68,23 @@ struct ShieldView: View {
     private var stickersLayer: some View {
         ZStack {
             ForEach(settingsManager.layout.stickers) { sticker in
-                if let nsImage = settingsManager.loadImage(from: sticker.imagePath) {
-                    Image(nsImage: nsImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 100 * sticker.scale, height: 100 * sticker.scale)
-                        .rotationEffect(.degrees(sticker.rotation))
-                        .offset(x: sticker.x, y: sticker.y)
+                Group {
+                    if let iconName = sticker.systemIconName {
+                        Image(systemName: iconName)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .foregroundStyle(Color.white)
+                            .shadow(color: .black.opacity(0.6), radius: 6, x: 0, y: 3)
+                    } else if let path = sticker.imagePath,
+                              let nsImage = settingsManager.loadImage(from: path) {
+                        Image(nsImage: nsImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    }
                 }
+                .frame(width: 100 * sticker.scale, height: 100 * sticker.scale)
+                .rotationEffect(.degrees(sticker.rotation))
+                .offset(x: sticker.x, y: sticker.y)
             }
         }
     }

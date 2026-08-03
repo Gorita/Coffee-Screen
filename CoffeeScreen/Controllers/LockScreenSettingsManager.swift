@@ -120,6 +120,24 @@ final class LockScreenSettingsManager: ObservableObject {
         }
     }
 
+    /// NSImage를 PNG 파일 데이터로 샌드박스 폴더에 직접 저장
+    func saveNSImageToSandbox(_ image: NSImage, filename: String) -> String? {
+        guard let tiffData = image.tiffRepresentation,
+              let bitmapImage = NSBitmapImageRep(data: tiffData),
+              let pngData = bitmapImage.representation(using: .png, properties: [:]) else {
+            return nil
+        }
+        let fileURL = customAssetsDirectory.appendingPathComponent(filename)
+        do {
+            try pngData.write(to: fileURL, options: .atomic)
+            print("[DEBUG][LockScreenSettingsManager] NSImage saved to sandbox: \(fileURL.path)")
+            return fileURL.path
+        } catch {
+            print("[ERROR][LockScreenSettingsManager] Failed to save NSImage to sandbox: \(error)")
+            return nil
+        }
+    }
+
     /// 상대 경로 또는 파일명을 수용하여 NSImage 불러오기
     func loadImage(from pathString: String) -> NSImage? {
         let url: URL
