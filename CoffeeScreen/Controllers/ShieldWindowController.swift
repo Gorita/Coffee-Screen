@@ -108,9 +108,10 @@ final class ShieldWindowController {
     /// 특정 화면에 대한 Shield 윈도우 생성
     private func createShieldWindow(for screen: NSScreen, with viewModel: ShieldViewModel) -> ShieldWindow {
         let window = ShieldWindow(screen: screen)
+        let isMain = (screen == NSScreen.main)
 
         // SwiftUI 뷰 연결
-        let shieldView = ShieldView(viewModel: viewModel)
+        let shieldView = ShieldView(viewModel: viewModel, isMainScreen: isMain)
         window.setContent(shieldView)
 
         return window

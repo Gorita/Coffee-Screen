@@ -18,6 +18,7 @@ struct MainView: View {
         }
     )
     @State private var showEscapeKeyPopover = false
+    @State private var showLockScreenEditor = false
     @AppStorage("backgroundStyle") private var backgroundStyleRaw: Int = 0
 
     /// Awake 상태 바인딩 (viewModel과 연결)
@@ -74,20 +75,33 @@ struct MainView: View {
 
                     Spacer()
 
-                    // Escape key settings button (shown only when PIN is set)
-                    if pinSettingsViewModel.isPINSet {
+                    // Action buttons
+                    HStack(spacing: 8) {
                         Button {
-                            showEscapeKeyPopover.toggle()
+                            showLockScreenEditor.toggle()
                         } label: {
-                            Image(systemName: "keyboard.badge.ellipsis")
+                            Image(systemName: "paintpalette.fill")
                         }
                         .buttonStyle(.pixelIcon)
-                        .help("Escape Key Settings")
-                        .popover(isPresented: $showEscapeKeyPopover, arrowEdge: .bottom) {
-                            KeyboardShortcutsPopoverView(
-                                escapeKeyViewModel: keyCombinationViewModel,
-                                lockHotkeyViewModel: lockHotkeyViewModel
-                            )
+                        .help("Customize Lock Screen")
+                        .sheet(isPresented: $showLockScreenEditor) {
+                            LockScreenEditorView()
+                        }
+
+                        if pinSettingsViewModel.isPINSet {
+                            Button {
+                                showEscapeKeyPopover.toggle()
+                            } label: {
+                                Image(systemName: "keyboard.badge.ellipsis")
+                            }
+                            .buttonStyle(.pixelIcon)
+                            .help("Escape Key Settings")
+                            .popover(isPresented: $showEscapeKeyPopover, arrowEdge: .bottom) {
+                                KeyboardShortcutsPopoverView(
+                                    escapeKeyViewModel: keyCombinationViewModel,
+                                    lockHotkeyViewModel: lockHotkeyViewModel
+                                )
+                            }
                         }
                     }
                 }
