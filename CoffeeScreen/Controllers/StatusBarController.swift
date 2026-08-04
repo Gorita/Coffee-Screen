@@ -49,6 +49,12 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         }
     }
 
+    deinit {
+        if let statusItem {
+            NSStatusBar.system.removeStatusItem(statusItem)
+        }
+    }
+
     // MARK: - Public Methods
 
     /// 상태 업데이트

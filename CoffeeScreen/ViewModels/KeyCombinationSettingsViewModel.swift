@@ -31,7 +31,7 @@ final class KeyCombinationSettingsViewModel: ObservableObject {
 
     // MARK: - Dependencies
 
-    private let currentProvider: () -> KeyCombination
+    private let currentProvider: () -> KeyCombination?
     private let saveAction: (KeyCombination) -> Bool
     private let resetAction: () -> Bool
     private let conflictChecker: ((KeyCombination) -> Bool)?
@@ -68,7 +68,7 @@ final class KeyCombinationSettingsViewModel: ObservableObject {
 
     /// 잠금 단축키 등 다른 manager를 사용하는 ViewModel 생성용
     init(
-        currentProvider: @escaping () -> KeyCombination,
+        currentProvider: @escaping () -> KeyCombination?,
         saveAction: @escaping (KeyCombination) -> Bool,
         resetAction: @escaping () -> Bool,
         conflictChecker: ((KeyCombination) -> Bool)? = nil
@@ -119,6 +119,9 @@ final class KeyCombinationSettingsViewModel: ObservableObject {
         }
 
         if saveAction(combination) {
+            if LockHotkeyManager.shared.useSameHotkeyForLock {
+                LockHotkeyManager.shared.setHotkey(combination)
+            }
             successMessage = "Key saved"
             isRecording = false
             recordedCombination = nil
@@ -168,7 +171,11 @@ final class KeyCombinationSettingsViewModel: ObservableObject {
 
     /// 현재 키 표시 업데이트
     private func updateCurrentKeyDisplay() {
-        currentKeyDisplay = currentProvider().displayString
+        if let combo = currentProvider() {
+            currentKeyDisplay = combo.displayString
+        } else {
+            currentKeyDisplay = "Not Set"
+        }
     }
 
     /// 메시지 초기화

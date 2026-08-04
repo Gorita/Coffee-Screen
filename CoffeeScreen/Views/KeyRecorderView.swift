@@ -37,7 +37,7 @@ struct KeyRecorderView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Current Key")
                     .font(.custom(pixelFont, size: 10))
-                    .foregroundStyle(Color.coffeeDark.opacity(0.7))
+                    .foregroundStyle(Color.coffeeDark.opacity(0.9))
 
                 Text(viewModel.currentKeyDisplay)
                     .font(.custom(pixelFont, size: 12))
@@ -68,7 +68,7 @@ struct KeyRecorderView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Press new key combination")
                 .font(.custom(pixelFont, size: 10))
-                .foregroundStyle(Color.coffeeDark.opacity(0.7))
+                .foregroundStyle(Color.coffeeDark.opacity(0.9))
 
             // Key capture area
             KeyCaptureView(viewModel: viewModel)
@@ -92,7 +92,7 @@ struct KeyRecorderView: View {
                     if viewModel.bothShiftsPressed {
                         Text("(Both Shifts)")
                             .font(.custom(pixelFont, size: 10))
-                            .foregroundStyle(Color.coffeeDark.opacity(0.7))
+                            .foregroundStyle(Color.coffeeDark.opacity(0.9))
                     }
                 }
             }

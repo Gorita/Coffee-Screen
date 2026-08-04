@@ -99,7 +99,11 @@ final class LockHotkeyHandler {
     // MARK: - Private Methods
 
     private func registerCurrentHotkey() -> Bool {
-        let combination = lockHotkeyManager.currentHotkey
+        guard let combination = lockHotkeyManager.currentHotkey else {
+            unregisterHotkey()
+            return true
+        }
+
         let modifiers = Self.carbonModifiers(from: combination.modifierFlags)
 
         var hotKeyID = EventHotKeyID(

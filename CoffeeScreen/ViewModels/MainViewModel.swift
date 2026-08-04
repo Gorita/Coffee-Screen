@@ -158,11 +158,28 @@ final class MainViewModel: ObservableObject {
 
     // MARK: - Private Methods
 
-    /// 비상 탈출 핸들러 설정
+    /// 비상 탈출 핸들러 설정 (해제 & 동일 키 사용 시 토글 대응)
     private func setupEmergencyEscape() {
         emergencyEscapeHandler.onEscape = { [weak self] in
-            guard let self, self.appState.isLocked else { return }
-            self.stopLock()
+            guard let self else { return }
+            if self.appState.isLocked {
+                self.stopLock()
+            } else if LockHotkeyManager.shared.useSameHotkeyForLock && self.isPINSet {
+                // 동일 키 사용 체크박스가 켜져 있으면 탈출 단축키로 미잠금 시 화면 잠금 시작
+                self.startLock()
+            }
+        }
+        emergencyEscapeHandler.start()
+
+        // 단축키 변경 알림 수신 시 항시 모니터링 갱신
+        NotificationCenter.default.addObserver(
+            forName: LockHotkeyManager.hotkeyDidChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            if LockHotkeyManager.shared.useSameHotkeyForLock {
+                self?.emergencyEscapeHandler.start()
+            }
         }
     }
 
@@ -170,9 +187,16 @@ final class MainViewModel: ObservableObject {
     private func setupLockHotkey() {
         lockHotkeyHandler.onTrigger = { [weak self] in
             guard let self else { return }
-            guard !self.appState.isLocked else { return }
-            guard self.isPINSet else { return }
-            self.startLock()
+            if !self.appState.isLocked {
+                guard self.isPINSet else { return }
+                self.startLock()
+            } else {
+                let isSame = LockHotkeyManager.shared.useSameHotkeyForLock ||
+                             (LockHotkeyManager.shared.currentHotkey?.conflicts(with: KeyCombinationManager.shared.currentKeyCombination) ?? false)
+                if isSame {
+                    self.stopLock()
+                }
+            }
         }
         lockHotkeyHandler.start()
     }

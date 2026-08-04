@@ -36,6 +36,7 @@ final class KeyCombinationManager {
         }
 
         UserDefaults.standard.set(data, forKey: Self.storageKey)
+        NotificationCenter.default.post(name: LockHotkeyManager.hotkeyDidChangeNotification, object: nil)
         return true
     }
 
@@ -43,6 +44,7 @@ final class KeyCombinationManager {
     @discardableResult
     func resetToDefault() -> Bool {
         UserDefaults.standard.removeObject(forKey: Self.storageKey)
+        NotificationCenter.default.post(name: LockHotkeyManager.hotkeyDidChangeNotification, object: nil)
         return true
     }
 

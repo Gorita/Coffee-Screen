@@ -4,18 +4,11 @@ import SwiftUI
 struct MainView: View {
     @EnvironmentObject var viewModel: MainViewModel
     @StateObject private var pinSettingsViewModel = PINSettingsViewModel()
-    @StateObject private var keyCombinationViewModel = KeyCombinationSettingsViewModel(
-        conflictChecker: { candidate in
-            candidate.conflicts(with: LockHotkeyManager.shared.currentHotkey)
-        }
-    )
+    @StateObject private var keyCombinationViewModel = KeyCombinationSettingsViewModel()
     @StateObject private var lockHotkeyViewModel = KeyCombinationSettingsViewModel(
         currentProvider: { LockHotkeyManager.shared.currentHotkey },
         saveAction: { LockHotkeyManager.shared.setHotkey($0) },
-        resetAction: { LockHotkeyManager.shared.resetToDefault() },
-        conflictChecker: { candidate in
-            candidate.conflicts(with: KeyCombinationManager.shared.currentKeyCombination)
-        }
+        resetAction: { LockHotkeyManager.shared.resetToDefault() }
     )
     @State private var showEscapeKeyPopover = false
     @State private var showLockScreenEditor = false
@@ -341,50 +334,80 @@ struct KeyboardShortcutsPopoverView: View {
     @ObservedObject var escapeKeyViewModel: KeyCombinationSettingsViewModel
     @ObservedObject var lockHotkeyViewModel: KeyCombinationSettingsViewModel
 
+    @State private var useSameKeyForLock: Bool = LockHotkeyManager.shared.useSameHotkeyForLock
     private let pixelFont = "Silkscreen-Regular"
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            // Lock shortcut section
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 8) {
-                    Image(systemName: "lock.fill")
-                    Text("Lock Shortcut")
-                        .font(.custom(pixelFont, size: 14))
-                }
-                .foregroundStyle(Color.coffeeDark)
-
-                Text("Press this combination anywhere to lock the screen.")
-                    .font(.custom(pixelFont, size: 10))
-                    .foregroundStyle(Color.coffeeDark.opacity(0.7))
-                    .fixedSize(horizontal: false, vertical: true)
-
-                KeyRecorderView(viewModel: lockHotkeyViewModel)
-            }
-
-            Rectangle()
-                .fill(Color.coffeeBrown.opacity(0.3))
-                .frame(height: 2)
-
-            // Escape key section
-            VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 18) {
+            // 1. Unlock & Escape Key (해제 단축키)
+            VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
                     Image(systemName: "keyboard")
-                    Text("Escape Key")
+                    Text("Unlock & Escape Key")
                         .font(.custom(pixelFont, size: 14))
                 }
                 .foregroundStyle(Color.coffeeDark)
 
-                Text("Set a key combination to unlock the screen in emergencies.")
+                Text("Set a key combination to unlock/escape in emergencies.")
                     .font(.custom(pixelFont, size: 10))
-                    .foregroundStyle(Color.coffeeDark.opacity(0.7))
+                    .foregroundStyle(Color.coffeeDark.opacity(0.85))
                     .fixedSize(horizontal: false, vertical: true)
 
                 KeyRecorderView(viewModel: escapeKeyViewModel)
             }
+
+            Rectangle()
+                .fill(Color.coffeeBrown.opacity(0.3))
+                .frame(height: 1)
+
+            // 2. 잠금 단축키 동일 사용 체크박스
+            Toggle(isOn: $useSameKeyForLock) {
+                Text("Use same key for Lock Shortcut")
+                    .font(.custom(pixelFont, size: 10))
+                    .foregroundStyle(Color.coffeeDark)
+            }
+            .toggleStyle(.checkbox)
+            .onChange(of: useSameKeyForLock) { newValue in
+                LockHotkeyManager.shared.useSameHotkeyForLock = newValue
+            }
+
+            // 3. 독립 잠금 단축키 (체크해제 시만 노출, 체크 시 숨김 및 데이터 제거)
+            if !useSameKeyForLock {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "lock.fill")
+                        Text("Independent Lock Shortcut")
+                            .font(.custom(pixelFont, size: 14))
+                    }
+                    .foregroundStyle(Color.coffeeDark)
+
+                    Text("Press this separate combination anywhere to lock the screen.")
+                        .font(.custom(pixelFont, size: 10))
+                        .foregroundStyle(Color.coffeeDark.opacity(0.85))
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    KeyRecorderView(viewModel: lockHotkeyViewModel)
+                }
+            } else {
+                HStack(spacing: 6) {
+                    Image(systemName: "link")
+                        .foregroundStyle(Color.coffeeBrown)
+                    Text("Lock shortcut is set to same key for 1-key toggle.")
+                        .font(.custom(pixelFont, size: 9))
+                        .foregroundStyle(Color.coffeeDark.opacity(0.8))
+                }
+                .padding(8)
+                .background(Color.coffeeCream.opacity(0.6))
+                .cornerRadius(6)
+            }
         }
         .padding(16)
         .frame(width: 340)
+        .background(Color.coffeeCream)
+        .preferredColorScheme(.light)
+        .onAppear {
+            useSameKeyForLock = LockHotkeyManager.shared.useSameHotkeyForLock
+        }
     }
 }
 
