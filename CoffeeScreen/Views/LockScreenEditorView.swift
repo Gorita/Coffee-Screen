@@ -946,7 +946,107 @@ struct FloatingControlPanelView: View {
 
             Divider()
 
-            // 5. Switches & Mode Switch Opacity
+            // 5. Title & Subtext Customization
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Title & Text Customization")
+                    .font(.custom(pixelFont, size: 11))
+                    .foregroundStyle(Color.coffeeDark)
+
+                // 1) 메인 타이틀
+                VStack(alignment: .leading, spacing: 6) {
+                    Toggle("Show Title Text", isOn: $editorController.draftLayout.unlockWindowConfig.isTitleVisible)
+                        .font(.caption)
+
+                    if editorController.draftLayout.unlockWindowConfig.isTitleVisible {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Title Text").font(.caption2).foregroundStyle(.secondary)
+                                Spacer()
+                            }
+                            TextField("Title", text: $editorController.draftLayout.unlockWindowConfig.titleText)
+                                .textFieldStyle(.roundedBorder)
+
+                            HStack {
+                                Text("Title Color").font(.caption2)
+                                Spacer()
+                                ColorPicker("", selection: Binding(
+                                    get: { Color(hex: editorController.draftLayout.unlockWindowConfig.titleColorHex) ?? .white },
+                                    set: { editorController.draftLayout.unlockWindowConfig.titleColorHex = $0.toHex() }
+                                ))
+                            }
+
+                            HStack {
+                                Text("Title Size").font(.caption2)
+                                Spacer()
+                                Text("\(Int(editorController.draftLayout.unlockWindowConfig.titleFontSize))pt")
+                                    .font(.caption2).foregroundStyle(.gray)
+                            }
+                            Slider(value: $editorController.draftLayout.unlockWindowConfig.titleFontSize, in: 14...40, step: 1)
+                        }
+                        .padding(.leading, 10)
+                    }
+                }
+
+                Divider().padding(.vertical, 2)
+
+                // 2) 서브텍스트 (안내 문구)
+                VStack(alignment: .leading, spacing: 6) {
+                    Toggle("Show Subtext (Subtitle)", isOn: $editorController.draftLayout.unlockWindowConfig.isSubtextVisible)
+                        .font(.caption)
+
+                    if editorController.draftLayout.unlockWindowConfig.isSubtextVisible {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Subtext").font(.caption2).foregroundStyle(.secondary)
+                                Spacer()
+                            }
+                            TextField("Subtext", text: $editorController.draftLayout.unlockWindowConfig.subtextText)
+                                .textFieldStyle(.roundedBorder)
+
+                            HStack {
+                                Text("Subtext Color").font(.caption2)
+                                Spacer()
+                                ColorPicker("", selection: Binding(
+                                    get: { Color(hex: editorController.draftLayout.unlockWindowConfig.subtextColorHex) ?? .gray },
+                                    set: { editorController.draftLayout.unlockWindowConfig.subtextColorHex = $0.toHex() }
+                                ))
+                            }
+
+                            HStack {
+                                Text("Subtext Size").font(.caption2)
+                                Spacer()
+                                Text("\(Int(editorController.draftLayout.unlockWindowConfig.subtextFontSize))pt")
+                                    .font(.caption2).foregroundStyle(.gray)
+                            }
+                            Slider(value: $editorController.draftLayout.unlockWindowConfig.subtextFontSize, in: 9...24, step: 1)
+                        }
+                        .padding(.leading, 10)
+                    }
+                }
+
+                Divider().padding(.vertical, 2)
+
+                // 3) 버튼 라벨 텍스트 변경 (Touch ID / PIN 버튼 문구)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Button Labels").font(.system(size: 11, weight: .semibold))
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Touch ID Button Text").font(.caption2).foregroundStyle(.secondary)
+                        TextField("Touch ID Label", text: $editorController.draftLayout.unlockWindowConfig.touchIDButtonText)
+                            .textFieldStyle(.roundedBorder)
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("PIN Confirm Button Text").font(.caption2).foregroundStyle(.secondary)
+                        TextField("PIN Label", text: $editorController.draftLayout.unlockWindowConfig.pinConfirmButtonText)
+                            .textFieldStyle(.roundedBorder)
+                    }
+                }
+            }
+
+            Divider()
+
+            // 6. Switches & Actions
             VStack(alignment: .leading, spacing: 12) {
                 Text("Switches & Actions")
                     .font(.custom(pixelFont, size: 11))
@@ -957,7 +1057,21 @@ struct FloatingControlPanelView: View {
                         .font(.caption)
 
                     if editorController.draftLayout.unlockWindowConfig.isModeSwitchButtonVisible {
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Use PIN Label").font(.caption2).foregroundStyle(.secondary)
+                                Spacer()
+                            }
+                            TextField("Use PIN", text: $editorController.draftLayout.unlockWindowConfig.usePINText)
+                                .textFieldStyle(.roundedBorder)
+
+                            HStack {
+                                Text("Use Touch ID Label").font(.caption2).foregroundStyle(.secondary)
+                                Spacer()
+                            }
+                            TextField("Use Touch ID", text: $editorController.draftLayout.unlockWindowConfig.useTouchIDText)
+                                .textFieldStyle(.roundedBorder)
+
                             HStack {
                                 Text("Mode Switch Opacity")
                                     .font(.caption2)
