@@ -58,17 +58,29 @@ final class LockScreenSettingsManager: ObservableObject {
     // MARK: - JSON Persistence
 
     func loadLayout() {
-        guard fileManager.fileExists(atPath: layoutFilePath.path) else {
-            print("[DEBUG][LockScreenSettingsManager] No saved layout found at \(layoutFilePath.path)")
-            return
+        if fileManager.fileExists(atPath: layoutFilePath.path) {
+            do {
+                let data = try Data(contentsOf: layoutFilePath)
+                let decoded = try JSONDecoder().decode(LockScreenLayout.self, from: data)
+                self.layout = decoded
+                print("[DEBUG][LockScreenSettingsManager] Loaded layout successfully.")
+            } catch {
+                print("[DEBUG][LockScreenSettingsManager] ERROR loading LockScreenLayout: \(error)")
+            }
         }
-        do {
-            let data = try Data(contentsOf: layoutFilePath)
-            let decoded = try JSONDecoder().decode(LockScreenLayout.self, from: data)
-            self.layout = decoded
-            print("[DEBUG][LockScreenSettingsManager] Loaded layout successfully. Stickers count: \(layout.stickers.count), bgType: \(layout.backgroundType)")
-        } catch {
-            print("[DEBUG][LockScreenSettingsManager] ERROR loading LockScreenLayout: \(error)")
+
+        // backgroundImagePath가 없거나 비어있는 경우 기본값을 Summer Horror 프리셋으로 설정
+        if layout.backgroundType == .customImage && (layout.backgroundImagePath == nil || layout.backgroundImagePath?.isEmpty == true) {
+            if let defaultPath = importPresetGIFToSandbox(named: "preset_creepy_horror") {
+                layout.backgroundImagePath = defaultPath
+                saveLayout()
+            }
+        } else if layout.backgroundImagePath == nil {
+            layout.backgroundType = .customImage
+            if let defaultPath = importPresetGIFToSandbox(named: "preset_creepy_horror") {
+                layout.backgroundImagePath = defaultPath
+                saveLayout()
+            }
         }
     }
 

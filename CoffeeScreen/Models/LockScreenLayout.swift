@@ -308,7 +308,7 @@ struct WidgetConfig: Codable, Equatable {
 
 /// 락스크린 전체 설정을 담는 데이터 구조체
 struct LockScreenLayout: Codable, Equatable {
-    var backgroundType: BackgroundType = .solidColor
+    var backgroundType: BackgroundType = .customImage
     var backgroundColorHex: String = "#000000"
     var backgroundImagePath: String?
 
