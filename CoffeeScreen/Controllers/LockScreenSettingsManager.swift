@@ -120,6 +120,38 @@ final class LockScreenSettingsManager: ObservableObject {
         }
     }
 
+    /// 번들 및 프로젝트 Resources 디렉토리에서 GIF 파일 탐색 후 샌드박스로 안전 저장 및 경로 반환 (고정 파일명으로 중복 생성 방지)
+    func importPresetGIFToSandbox(named resourceName: String) -> String? {
+        let gifFileName = resourceName.hasSuffix(".gif") ? resourceName : "\(resourceName).gif"
+
+        // 1. Bundle.main 탐색
+        var gifURL = Bundle.main.url(forResource: resourceName, withExtension: "gif")
+
+        // 2. 프로젝트 Resources 디렉토리 Fallback 탐색
+        if gifURL == nil {
+            let resourcePath = "/Users/mireuk/GeminiCli/Coffee-Screen/CoffeeScreen/Resources/\(gifFileName)"
+            if fileManager.fileExists(atPath: resourcePath) {
+                gifURL = URL(fileURLWithPath: resourcePath)
+            }
+        }
+
+        guard let validURL = gifURL else {
+            print("[DEBUG][LockScreenSettingsManager] Could not locate GIF preset: \(resourceName)")
+            return nil
+        }
+
+        let destinationURL = customAssetsDirectory.appendingPathComponent(gifFileName)
+        do {
+            let imageData = try Data(contentsOf: validURL)
+            try imageData.write(to: destinationURL, options: .atomic)
+            print("[DEBUG][LockScreenSettingsManager] Preset GIF written to sandbox: \(destinationURL.path)")
+            return destinationURL.path
+        } catch {
+            print("[ERROR][LockScreenSettingsManager] Failed to write preset GIF to sandbox: \(error)")
+            return destinationURL.path
+        }
+    }
+
     /// NSImage를 PNG 파일 데이터로 샌드박스 폴더에 직접 저장
     func saveNSImageToSandbox(_ image: NSImage, filename: String) -> String? {
         guard let tiffData = image.tiffRepresentation,

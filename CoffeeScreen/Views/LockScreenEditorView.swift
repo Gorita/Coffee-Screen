@@ -142,12 +142,7 @@ struct FloatingControlPanelView: View {
 
             Picker("", selection: Binding(
                 get: { editorController.draftLayout.backgroundType },
-                set: { newType in
-                    editorController.draftLayout.backgroundType = newType
-                    if newType == .customImage && editorController.draftLayout.backgroundImagePath == nil {
-                        selectImageFile(for: .background)
-                    }
-                }
+                set: { editorController.draftLayout.backgroundType = $0 }
             )) {
                 ForEach(BackgroundType.allCases) { type in
                     Text(type.displayName).tag(type)
@@ -233,6 +228,54 @@ struct FloatingControlPanelView: View {
                                         }
                                     }
                                 }
+                            }
+                        }
+                    }
+
+                    // Recommended Preset Wallpapers (Dev Terminal, Ghostty ASCII, Summer Horror)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Recommended Preset Wallpapers")
+                            .font(.custom(pixelFont, size: 9))
+                            .foregroundStyle(Color.coffeeDark)
+
+                        HStack(spacing: 8) {
+                            ForEach([
+                                (name: "Dev Terminal", resourceName: "preset_dev_terminal"),
+                                (name: "Ghostty ASCII", resourceName: "preset_ghostty_ascii"),
+                                (name: "Summer Horror", resourceName: "preset_creepy_horror")
+                            ], id: \.resourceName) { preset in
+                                Button {
+                                    print("[DEBUG][LockScreenEditorView] Recommended preset clicked: \(preset.name)")
+                                    if let savedPath = settingsManager.importPresetGIFToSandbox(named: preset.resourceName) {
+                                        print("[DEBUG][LockScreenEditorView] Draft GIF background path: \(savedPath)")
+                                        editorController.draftLayout.backgroundImagePath = savedPath
+                                        editorController.draftLayout.backgroundType = .customImage
+                                    }
+                                } label: {
+                                    VStack(spacing: 4) {
+                                        let thumbPath = "/Users/mireuk/GeminiCli/Coffee-Screen/CoffeeScreen/Resources/\(preset.resourceName).gif"
+                                        if let nsImage = settingsManager.loadImage(from: thumbPath) ?? NSImage(contentsOfFile: thumbPath) {
+                                            Image(nsImage: nsImage)
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fill)
+                                                .frame(width: 80, height: 48)
+                                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 6)
+                                                        .strokeBorder(editorController.draftLayout.backgroundImagePath?.contains(preset.resourceName) == true ? Color.yellow : Color.white.opacity(0.3), lineWidth: editorController.draftLayout.backgroundImagePath?.contains(preset.resourceName) == true ? 2 : 1)
+                                                )
+                                        } else {
+                                            Rectangle()
+                                                .fill(Color.gray.opacity(0.3))
+                                                .frame(width: 80, height: 48)
+                                                .cornerRadius(6)
+                                        }
+                                        Text(preset.name)
+                                            .font(.system(size: 8))
+                                            .foregroundStyle(editorController.draftLayout.backgroundImagePath?.contains(preset.resourceName) == true ? Color.coffeeBrown : Color.gray)
+                                    }
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
                     }
@@ -685,14 +728,6 @@ struct FloatingControlPanelView: View {
                         if mode == .background {
                             editorController.draftLayout.backgroundImagePath = savedPath
                             editorController.draftLayout.backgroundType = .customImage
-
-                            var recent = editorController.draftLayout.recentImagePaths
-                            recent.removeAll { $0 == savedPath }
-                            recent.insert(savedPath, at: 0)
-                            if recent.count > 6 {
-                                recent = Array(recent.prefix(6))
-                            }
-                            editorController.draftLayout.recentImagePaths = recent
                         } else {
                             var finalPath = savedPath
                             var backgroundRemoved = false

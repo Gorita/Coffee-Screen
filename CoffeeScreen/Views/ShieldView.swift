@@ -48,15 +48,25 @@ struct ShieldView: View {
         case .solidColor:
             layout.backgroundColor
         case .customImage:
-            if let bgPath = layout.backgroundImagePath,
-               let nsImage = settingsManager.loadImage(from: bgPath) {
-                Image(nsImage: nsImage)
-                    .resizable()
-                    .aspectRatio(contentMode: layout.imageContentMode == .fill ? .fill : .fit)
-                    .scaleEffect(layout.imageScale)
-                    .offset(x: layout.imageOffsetX, y: layout.imageOffsetY)
-                    .frame(width: size.width, height: size.height)
-                    .clipped()
+            if let bgPath = layout.backgroundImagePath {
+                let isGIF = bgPath.lowercased().hasSuffix(".gif")
+                if isGIF {
+                    AnimatedGIFView(imagePath: bgPath, contentMode: layout.imageContentMode)
+                        .scaleEffect(layout.imageScale)
+                        .offset(x: layout.imageOffsetX, y: layout.imageOffsetY)
+                        .frame(width: size.width, height: size.height)
+                        .clipped()
+                } else if let nsImage = settingsManager.loadImage(from: bgPath) {
+                    Image(nsImage: nsImage)
+                        .resizable()
+                        .aspectRatio(contentMode: layout.imageContentMode == .fill ? .fill : .fit)
+                        .scaleEffect(layout.imageScale)
+                        .offset(x: layout.imageOffsetX, y: layout.imageOffsetY)
+                        .frame(width: size.width, height: size.height)
+                        .clipped()
+                } else {
+                    Color.black
+                }
             } else {
                 Color.black
             }

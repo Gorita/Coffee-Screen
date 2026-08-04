@@ -9,7 +9,7 @@ final class BorderlessInteractiveWindow: NSWindow {
 
 /// 전체 화면 라이브 프리뷰 윈도우 및 플로팅 컨트롤러 패널을 총괄하는 컨트롤러
 @MainActor
-final class LockScreenEditorWindowController: ObservableObject {
+final class LockScreenEditorWindowController: NSObject, ObservableObject, NSWindowDelegate {
     static let shared = LockScreenEditorWindowController()
 
     @Published var isEditing: Bool = false
@@ -18,7 +18,9 @@ final class LockScreenEditorWindowController: ObservableObject {
     private var previewWindow: BorderlessInteractiveWindow?
     private var floatingPanel: NSPanel?
 
-    private init() {}
+    private override init() {
+        super.init()
+    }
 
     /// 라이브 프리뷰 에디터 시작
     func startEditing() {
@@ -38,6 +40,22 @@ final class LockScreenEditorWindowController: ObservableObject {
 
         if save {
             print("[DEBUG][LockScreenEditorWindowController] Saving draft layout to settingsManager...")
+            // 유저가 최종 Save를 눌렀을 때만 커스텀 이미지를 Recent Image Library에 수록
+            if draftLayout.backgroundType == .customImage, let savedPath = draftLayout.backgroundImagePath, !savedPath.isEmpty {
+                var recent = draftLayout.recentImagePaths
+                let targetFileName = URL(fileURLWithPath: savedPath).lastPathComponent
+                let targetBaseName = URL(fileURLWithPath: savedPath).deletingPathExtension().lastPathComponent
+                recent.removeAll { path in
+                    let currentFileName = URL(fileURLWithPath: path).lastPathComponent
+                    let currentBaseName = URL(fileURLWithPath: path).deletingPathExtension().lastPathComponent
+                    return path == savedPath || currentFileName == targetFileName || currentBaseName == targetBaseName
+                }
+                recent.insert(savedPath, at: 0)
+                if recent.count > 6 {
+                    recent = Array(recent.prefix(6))
+                }
+                draftLayout.recentImagePaths = recent
+            }
             LockScreenSettingsManager.shared.layout = draftLayout
             LockScreenSettingsManager.shared.saveLayout()
         } else {
@@ -47,6 +65,7 @@ final class LockScreenEditorWindowController: ObservableObject {
         previewWindow?.orderOut(nil)
         previewWindow = nil
 
+        floatingPanel?.delegate = nil
         floatingPanel?.orderOut(nil)
         floatingPanel = nil
 
@@ -109,12 +128,21 @@ final class LockScreenEditorWindowController: ObservableObject {
         panel.isFloatingPanel = true
         panel.becomesKeyOnlyIfNeeded = true
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        panel.delegate = self
 
         let controlView = FloatingControlPanelView(editorController: self)
         panel.contentView = NSHostingView(rootView: controlView)
         panel.makeKeyAndOrderFront(nil)
 
         self.floatingPanel = panel
+    }
+
+    // MARK: - NSWindowDelegate
+    nonisolated func windowWillClose(_ notification: Notification) {
+        Task { @MainActor in
+            print("[DEBUG][LockScreenEditorWindowController] Floating panel window closed by user. Closing editor...")
+            LockScreenEditorWindowController.shared.stopEditing(save: false)
+        }
     }
 }
 
@@ -162,15 +190,25 @@ struct LiveShieldPreviewView: View {
         case .solidColor:
             layout.backgroundColor
         case .customImage:
-            if let bgPath = layout.backgroundImagePath,
-               let nsImage = LockScreenSettingsManager.shared.loadImage(from: bgPath) {
-                Image(nsImage: nsImage)
-                    .resizable()
-                    .aspectRatio(contentMode: layout.imageContentMode == .fill ? .fill : .fit)
-                    .scaleEffect(layout.imageScale)
-                    .offset(x: layout.imageOffsetX, y: layout.imageOffsetY)
-                    .frame(width: size.width, height: size.height)
-                    .clipped()
+            if let bgPath = layout.backgroundImagePath {
+                let isGIF = bgPath.lowercased().hasSuffix(".gif")
+                if isGIF {
+                    AnimatedGIFView(imagePath: bgPath, contentMode: layout.imageContentMode)
+                        .scaleEffect(layout.imageScale)
+                        .offset(x: layout.imageOffsetX, y: layout.imageOffsetY)
+                        .frame(width: size.width, height: size.height)
+                        .clipped()
+                } else if let nsImage = LockScreenSettingsManager.shared.loadImage(from: bgPath) {
+                    Image(nsImage: nsImage)
+                        .resizable()
+                        .aspectRatio(contentMode: layout.imageContentMode == .fill ? .fill : .fit)
+                        .scaleEffect(layout.imageScale)
+                        .offset(x: layout.imageOffsetX, y: layout.imageOffsetY)
+                        .frame(width: size.width, height: size.height)
+                        .clipped()
+                } else {
+                    Color.black
+                }
             } else {
                 Color.black
             }
@@ -190,7 +228,7 @@ struct LiveShieldPreviewView: View {
 
         return VStack {
             Spacer()
-            UnlockView(viewModel: dummyShieldViewModel)
+            UnlockView(viewModel: dummyShieldViewModel, configOverride: config)
                 .padding(32)
                 .background(unlockWindowBackground(style: config.style, opacity: config.opacity))
                 .shadow(color: config.style == .none ? .clear : .black.opacity(0.5), radius: 20, x: 0, y: 10)
