@@ -188,7 +188,7 @@ enum StickerStyle: String, Codable, CaseIterable, Identifiable {
 
 /// 인증 창 위치 및 카드 모양 설정
 struct UnlockWindowConfig: Codable, Equatable {
-    var style: UnlockWindowStyle = .glassmorphic
+    var style: UnlockWindowStyle = .none
     var xOffset: CGFloat = 0
     var yOffset: CGFloat = 0
     var opacity: Double = 0.45
@@ -196,7 +196,7 @@ struct UnlockWindowConfig: Codable, Equatable {
     // 상단 헤더 아이콘 커스텀
     var headerIcon: UnlockHeaderIcon = .lock
     var headerCustomImagePath: String? = nil
-    var headerIconColorHex: String = "#FFD700"
+    var headerIconColorHex: String = "#FFFFFF"
 
     // 지문 인증 커스텀
     var touchIDStyle: TouchIDIconStyle = .touchID
@@ -326,7 +326,7 @@ struct LockScreenLayout: Codable, Equatable {
     var unlockWindowConfig: UnlockWindowConfig = UnlockWindowConfig()
 
     var clockConfig: WidgetConfig = WidgetConfig(
-        isEnabled: true,
+        isEnabled: false,
         x: 0,
         y: -160,
         fontColorHex: "#FFFFFF",
@@ -334,7 +334,7 @@ struct LockScreenLayout: Codable, Equatable {
     )
     
     var infoMessageConfig: WidgetConfig = WidgetConfig(
-        isEnabled: true,
+        isEnabled: false,
         x: 0,
         y: -100,
         fontColorHex: "#E0E0E0",

@@ -34,6 +34,7 @@ struct FloatingControlPanelView: View {
     enum ImagePickerMode {
         case background
         case sticker
+        case headerIcon
     }
 
     var body: some View {
@@ -734,7 +735,76 @@ struct FloatingControlPanelView: View {
 
             Divider()
 
-            // 3. Touch ID Button Customization (해당 버튼 하위 위계)
+            // 3. Header Icon Customization
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Header Icon")
+                    .font(.custom(pixelFont, size: 11))
+                    .foregroundStyle(Color.coffeeDark)
+
+                Picker("Icon Style", selection: $editorController.draftLayout.unlockWindowConfig.headerIcon) {
+                    ForEach(UnlockHeaderIcon.allCases) { icon in
+                        Text(icon.displayName).tag(icon)
+                    }
+                }
+                .pickerStyle(.radioGroup)
+
+                if editorController.draftLayout.unlockWindowConfig.headerIcon == .customImage {
+                    // Custom Image 선택 시 파일 피커 버튼
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Button("Select Image...") {
+                                selectImageFile(for: .headerIcon)
+                            }
+                            .buttonStyle(.pixelSecondary)
+                            .font(.system(size: 10))
+
+                            if let path = editorController.draftLayout.unlockWindowConfig.headerCustomImagePath {
+                                Text(URL(fileURLWithPath: path).lastPathComponent)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                                Spacer()
+                                Button("✕") {
+                                    editorController.draftLayout.unlockWindowConfig.headerCustomImagePath = nil
+                                }
+                                .font(.caption2)
+                                .foregroundStyle(.red)
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                } else if editorController.draftLayout.unlockWindowConfig.headerIcon != .none {
+                    // SF Symbol 선택 시 색상 피커
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Text("Icon Color")
+                                .font(.caption)
+                            Spacer()
+                            ColorPicker("", selection: Binding(
+                                get: { editorController.draftLayout.unlockWindowConfig.headerIconColor },
+                                set: { editorController.draftLayout.unlockWindowConfig.headerIconColorHex = $0.toHex() }
+                            ))
+                        }
+
+                        HStack(spacing: 6) {
+                            ForEach([("#FFD700", "Gold"), ("#FFFFFF", "White"), ("#3B82F6", "Blue"), ("#22C55E", "Green"), ("#EF4444", "Red"), ("#A855F7", "Purple")], id: \.0) { hex, _ in
+                                Circle()
+                                    .fill(Color(hex: hex) ?? .yellow)
+                                    .frame(width: 18, height: 18)
+                                    .overlay(Circle().stroke(Color.gray.opacity(0.4), lineWidth: 1))
+                                    .onTapGesture {
+                                        editorController.draftLayout.unlockWindowConfig.headerIconColorHex = hex
+                                    }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Divider()
+
+            // 4. Touch ID Button Customization (해당 버튼 하위 위계)
             VStack(alignment: .leading, spacing: 10) {
                 Text("Touch ID Button Customization")
                     .font(.custom(pixelFont, size: 11))
@@ -934,6 +1004,8 @@ struct FloatingControlPanelView: View {
                         if mode == .background {
                             editorController.draftLayout.backgroundImagePath = savedPath
                             editorController.draftLayout.backgroundType = .customImage
+                        } else if mode == .headerIcon {
+                            editorController.draftLayout.unlockWindowConfig.headerCustomImagePath = savedPath
                         } else {
                             var finalPath = savedPath
                             var backgroundRemoved = false
