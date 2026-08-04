@@ -54,11 +54,56 @@ final class ShieldViewModel: ObservableObject {
         pinManager.isPINSet
     }
 
+    // MARK: - Key Event Handler
+
+    private var keyMonitor: Any?
+
+    /// 키보드 이벤트 모니터링 시작 (Enter 키 누름 감지)
+    func setupKeyMonitor() {
+        guard keyMonitor == nil else { return }
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self = self else { return event }
+            // Return(36) or Keypad Enter(76)
+            if event.keyCode == 36 || event.keyCode == 76 {
+                Task { @MainActor in
+                    self.handleEnterKeyPress()
+                }
+                return nil
+            }
+            return event
+        }
+    }
+
+    /// 키보드 이벤트 모니터링 해제
+    func removeKeyMonitor() {
+        if let monitor = keyMonitor {
+            NSEvent.removeMonitor(monitor)
+            keyMonitor = nil
+        }
+    }
+
+    /// Enter 키 입력 시 동작 처리 (Touch ID 모드에서도 즉시 PIN 입력 모드로 전환)
+    func handleEnterKeyPress() {
+        if authMode == .touchID {
+            showPINInputIfAvailable()
+        } else if authMode == .pin {
+            if !pinInput.isEmpty {
+                attemptPINUnlock()
+            }
+        }
+    }
+
     // MARK: - Initialization
 
     init(authManager: AuthManager = AuthManager(), pinManager: PINManager = .shared) {
         self.authManager = authManager
         self.pinManager = pinManager
+    }
+
+    deinit {
+        if let monitor = keyMonitor {
+            NSEvent.removeMonitor(monitor)
+        }
     }
 
     // MARK: - Public Methods
@@ -122,6 +167,7 @@ final class ShieldViewModel: ObservableObject {
             showPINInput = true
             authError = nil
             pinInput = ""
+            NSApp.activate(ignoringOtherApps: true)
         } else {
             authError = String(localized: "error.pin.notSet")
         }

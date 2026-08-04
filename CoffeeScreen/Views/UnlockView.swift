@@ -189,20 +189,21 @@ struct PINInputView: View {
 
     var body: some View {
         VStack(spacing: 14) {
-            // 커스텀 마스크 심볼 표시 가이드
-            HStack(spacing: 8) {
-                ForEach(0..<max(4, viewModel.pinInput.count), id: \.self) { index in
-                    let isEntered = index < viewModel.pinInput.count
-                    Text(isEntered ? config.pinMaskSymbol.rawValue : "-")
-                        .font(.custom(pixelFont, size: 16))
-                        .foregroundStyle(isEntered ? Color.yellow : Color.gray.opacity(0.5))
-                        .frame(width: 32, height: 36)
-                        .background(config.pinInputBoxColor.opacity(config.pinInputBoxOpacity))
-                        .cornerRadius(6)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .strokeBorder(isEntered ? Color.yellow : Color.white.opacity(0.2), lineWidth: 1)
-                        )
+            // 2번 옵션: 미리 빈 네모 상자를 보여주지 않고, 유저가 입력한 글자 수만큼만 동적으로 심볼 표시
+            if !viewModel.pinInput.isEmpty {
+                HStack(spacing: 8) {
+                    ForEach(0..<viewModel.pinInput.count, id: \.self) { _ in
+                        Text(config.pinMaskSymbol.rawValue)
+                            .font(.custom(pixelFont, size: 16))
+                            .foregroundStyle(Color.yellow)
+                            .frame(width: 32, height: 36)
+                            .background(config.pinInputBoxColor.opacity(config.pinInputBoxOpacity))
+                            .cornerRadius(6)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .strokeBorder(Color.yellow, lineWidth: 1)
+                            )
+                    }
                 }
             }
 
@@ -217,7 +218,18 @@ struct PINInputView: View {
                     viewModel.attemptPINUnlock()
                 }
                 .onAppear {
-                    isFocused = true
+                    NSApp.activate(ignoringOtherApps: true)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                        isFocused = true
+                    }
+                }
+                .onChange(of: viewModel.showPINInput) { show in
+                    if show {
+                        NSApp.activate(ignoringOtherApps: true)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                            isFocused = true
+                        }
+                    }
                 }
 
             // PIN confirm button

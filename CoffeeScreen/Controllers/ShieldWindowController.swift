@@ -61,6 +61,9 @@ final class ShieldWindowController {
 
         currentViewModel = viewModel
 
+        // Enter 키 누름 감지 키 모니터 활성화 (Touch ID ➔ PIN 즉시 전환)
+        viewModel.setupKeyMonitor()
+
         // 현재 화면 구성으로 쉴드 구성
         syncShields()
 
@@ -71,6 +74,7 @@ final class ShieldWindowController {
     /// 모든 Shield 윈도우 닫기
     func hideShields() {
         stopPolling()
+        currentViewModel?.removeKeyMonitor()
         shieldWindows.values.forEach { $0.close() }
         shieldWindows.removeAll()
         currentViewModel = nil
@@ -100,9 +104,17 @@ final class ShieldWindowController {
 
             if let existing = shieldWindows[id] {
                 existing.setFrame(screen.frame, display: true)
+                if screen == NSScreen.main {
+                    existing.makeKeyAndOrderFront(nil)
+                }
             } else {
                 let window = createShieldWindow(for: screen, with: viewModel)
-                window.orderFrontRegardless()
+                if screen == NSScreen.main {
+                    window.makeKeyAndOrderFront(nil)
+                    NSApp.activate(ignoringOtherApps: true)
+                } else {
+                    window.orderFrontRegardless()
+                }
                 shieldWindows[id] = window
             }
         }
