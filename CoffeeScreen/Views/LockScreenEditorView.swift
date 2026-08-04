@@ -667,32 +667,238 @@ struct FloatingControlPanelView: View {
     // MARK: - Unlock Window Control Section
 
     private var unlockWindowControlSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Unlock Window Box Style")
-                .font(.custom(pixelFont, size: 11))
-                .foregroundStyle(Color.coffeeDark)
+        VStack(alignment: .leading, spacing: 16) {
+            // 1. Box Style & Opacity (라디오 버튼 목록 형태 .radioGroup)
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Unlock Window Box Style")
+                    .font(.custom(pixelFont, size: 11))
+                    .foregroundStyle(Color.coffeeDark)
 
-            Picker("", selection: $editorController.draftLayout.unlockWindowConfig.style) {
-                ForEach(UnlockWindowStyle.allCases) { style in
-                    Text(style.displayName).tag(style)
+                Picker("", selection: $editorController.draftLayout.unlockWindowConfig.style) {
+                    ForEach(UnlockWindowStyle.allCases) { style in
+                        Text(style.displayName).tag(style)
+                    }
+                }
+                .pickerStyle(.radioGroup)
+
+                if editorController.draftLayout.unlockWindowConfig.style != .none {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Box Opacity: \(Int(editorController.draftLayout.unlockWindowConfig.opacity * 100))%")
+                            .font(.caption)
+                        Slider(value: $editorController.draftLayout.unlockWindowConfig.opacity, in: 0.0...1.0)
+                    }
                 }
             }
-            .pickerStyle(.radioGroup)
 
             Divider()
 
-            if editorController.draftLayout.unlockWindowConfig.style != .none {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Box Opacity")
-                        .font(.caption)
-                    Slider(value: $editorController.draftLayout.unlockWindowConfig.opacity, in: 0.0...1.0)
+            // 2. Position X / Y Offset & Center Align Button
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("Position Offset")
+                        .font(.custom(pixelFont, size: 11))
+                        .foregroundStyle(Color.coffeeDark)
+                    Spacer()
+                    Button("Center Align Window") {
+                        editorController.draftLayout.unlockWindowConfig.xOffset = 0
+                        editorController.draftLayout.unlockWindowConfig.yOffset = 0
+                    }
+                    .font(.system(size: 9))
+                    .buttonStyle(.pixelSecondary)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Box X Offset (Horizontal)")
+                            .font(.caption)
+                        Spacer()
+                        Text("\(Int(editorController.draftLayout.unlockWindowConfig.xOffset))px")
+                            .font(.caption)
+                            .foregroundStyle(.gray)
+                    }
+                    Slider(value: $editorController.draftLayout.unlockWindowConfig.xOffset, in: -700...700, step: 5)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Box Y Offset (Vertical)")
+                            .font(.caption)
+                        Spacer()
+                        Text("\(Int(editorController.draftLayout.unlockWindowConfig.yOffset))px")
+                            .font(.caption)
+                            .foregroundStyle(.gray)
+                    }
+                    Slider(value: $editorController.draftLayout.unlockWindowConfig.yOffset, in: -500...500, step: 5)
                 }
             }
 
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Box Y Offset (Vertical Position)")
+            Divider()
+
+            // 3. Touch ID Button Customization (해당 버튼 하위 위계)
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Touch ID Button Customization")
+                    .font(.custom(pixelFont, size: 11))
+                    .foregroundStyle(Color.coffeeDark)
+
+                Picker("Button Style", selection: $editorController.draftLayout.unlockWindowConfig.touchIDButtonStyle) {
+                    ForEach(ButtonStyleType.allCases) { style in
+                        Text(style.displayName).tag(style)
+                    }
+                }
+                .pickerStyle(.radioGroup)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Touch ID Button Width")
+                            .font(.caption)
+                        Spacer()
+                        Text("\(Int(editorController.draftLayout.unlockWindowConfig.touchIDButtonWidth))pt")
+                            .font(.caption)
+                            .foregroundStyle(.gray)
+                    }
+                    Slider(value: $editorController.draftLayout.unlockWindowConfig.touchIDButtonWidth, in: 120...220, step: 5)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Touch ID Button Opacity")
+                            .font(.caption)
+                        Spacer()
+                        Text("\(Int(editorController.draftLayout.unlockWindowConfig.touchIDButtonOpacity * 100))%")
+                            .font(.caption)
+                            .foregroundStyle(.gray)
+                    }
+                    Slider(value: $editorController.draftLayout.unlockWindowConfig.touchIDButtonOpacity, in: 0.2...1.0, step: 0.05)
+                }
+
+                // Touch ID 전용 색상 및 하위 프리셋 칩
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("Touch ID Button Color")
+                            .font(.caption)
+                        Spacer()
+                        ColorPicker("", selection: Binding(
+                            get: { editorController.draftLayout.unlockWindowConfig.touchIDButtonColor },
+                            set: { editorController.draftLayout.unlockWindowConfig.touchIDButtonColorHex = $0.toHex() }
+                        ))
+                    }
+
+                    HStack(spacing: 6) {
+                        ForEach([("#3B82F6", "Blue"), ("#22C55E", "Green"), ("#A855F7", "Purple"), ("#F97316", "Orange"), ("#1F2937", "Dark"), ("#FFFFFF", "White")], id: \.0) { hex, label in
+                            Circle()
+                                .fill(Color(hex: hex) ?? .blue)
+                                .frame(width: 18, height: 18)
+                                .overlay(Circle().stroke(Color.gray.opacity(0.4), lineWidth: 1))
+                                .onTapGesture {
+                                    editorController.draftLayout.unlockWindowConfig.touchIDButtonColorHex = hex
+                                }
+                        }
+                    }
+                }
+            }
+
+            Divider()
+
+            // 4. PIN Button & Mask Customization (해당 버튼 하위 위계)
+            VStack(alignment: .leading, spacing: 10) {
+                Text("PIN Input & Button Customization")
+                    .font(.custom(pixelFont, size: 11))
+                    .foregroundStyle(Color.coffeeDark)
+
+                Picker("PIN Style", selection: $editorController.draftLayout.unlockWindowConfig.pinButtonStyle) {
+                    ForEach(PINButtonStyle.allCases) { style in
+                        Text(style.displayName).tag(style)
+                    }
+                }
+                .pickerStyle(.radioGroup)
+
+                Picker("Mask Symbol", selection: $editorController.draftLayout.unlockWindowConfig.pinMaskSymbol) {
+                    ForEach(PINMaskSymbol.allCases) { symbol in
+                        Text("\(symbol.displayName) (\(symbol.rawValue))").tag(symbol)
+                    }
+                }
+                .pickerStyle(.radioGroup)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Confirm Button Width")
+                            .font(.caption)
+                        Spacer()
+                        Text("\(Int(editorController.draftLayout.unlockWindowConfig.pinButtonWidth))pt")
+                            .font(.caption)
+                            .foregroundStyle(.gray)
+                    }
+                    Slider(value: $editorController.draftLayout.unlockWindowConfig.pinButtonWidth, in: 120...220, step: 5)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Confirm Button Opacity")
+                            .font(.caption)
+                        Spacer()
+                        Text("\(Int(editorController.draftLayout.unlockWindowConfig.pinConfirmButtonOpacity * 100))%")
+                            .font(.caption)
+                            .foregroundStyle(.gray)
+                    }
+                    Slider(value: $editorController.draftLayout.unlockWindowConfig.pinConfirmButtonOpacity, in: 0.2...1.0, step: 0.05)
+                }
+
+                // PIN 전용 색상 및 하위 프리셋 칩
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("PIN Confirm Button Color")
+                            .font(.caption)
+                        Spacer()
+                        ColorPicker("", selection: Binding(
+                            get: { editorController.draftLayout.unlockWindowConfig.pinConfirmButtonColor },
+                            set: { editorController.draftLayout.unlockWindowConfig.pinConfirmButtonColorHex = $0.toHex() }
+                        ))
+                    }
+
+                    HStack(spacing: 6) {
+                        ForEach([("#22C55E", "Green"), ("#3B82F6", "Blue"), ("#F97316", "Orange"), ("#EF4444", "Red"), ("#A855F7", "Purple"), ("#EAB308", "Gold")], id: \.0) { hex, label in
+                            Circle()
+                                .fill(Color(hex: hex) ?? .green)
+                                .frame(width: 18, height: 18)
+                                .overlay(Circle().stroke(Color.gray.opacity(0.4), lineWidth: 1))
+                                .onTapGesture {
+                                    editorController.draftLayout.unlockWindowConfig.pinConfirmButtonColorHex = hex
+                                }
+                        }
+                    }
+                }
+            }
+
+            Divider()
+
+            // 5. Switches & Mode Switch Opacity
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Switches & Actions")
+                    .font(.custom(pixelFont, size: 11))
+                    .foregroundStyle(Color.coffeeDark)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Toggle("Show Mode Switch Button (PIN / Touch ID)", isOn: $editorController.draftLayout.unlockWindowConfig.isModeSwitchButtonVisible)
+                        .font(.caption)
+
+                    if editorController.draftLayout.unlockWindowConfig.isModeSwitchButtonVisible {
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack {
+                                Text("Mode Switch Opacity")
+                                    .font(.caption2)
+                                Spacer()
+                                Text("\(Int(editorController.draftLayout.unlockWindowConfig.modeSwitchOpacity * 100))%")
+                                    .font(.caption2)
+                                    .foregroundStyle(.gray)
+                            }
+                            Slider(value: $editorController.draftLayout.unlockWindowConfig.modeSwitchOpacity, in: 0.2...1.0, step: 0.05)
+                        }
+                        .padding(.leading, 10)
+                    }
+                }
+
+                Toggle("Show Mac Shutdown Button", isOn: $editorController.draftLayout.unlockWindowConfig.isShutdownButtonVisible)
                     .font(.caption)
-                Slider(value: $editorController.draftLayout.unlockWindowConfig.yOffset, in: -500...500)
             }
         }
     }
