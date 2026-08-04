@@ -14,19 +14,21 @@ struct FloatingControlPanelView: View {
     private let pixelFont = "Silkscreen-Regular"
 
     enum EditorTab: String, CaseIterable, Identifiable {
-        case background = "Background"
-        case stickers = "Stickers"
-        case widgets = "Widgets"
+        case background   = "Background"
+        case stickers     = "Stickers"
+        case widgets      = "Widgets"
         case unlockWindow = "Unlock Box"
+        case bulletinBoard = "알림판"
 
         var id: String { rawValue }
 
         var iconName: String {
             switch self {
-            case .background: return "photo.fill"
-            case .stickers: return "face.smiling.fill"
-            case .widgets: return "clock.fill"
+            case .background:   return "photo.fill"
+            case .stickers:     return "face.smiling.fill"
+            case .widgets:      return "clock.fill"
             case .unlockWindow: return "lock.rectangle.stack.fill"
+            case .bulletinBoard: return "bell.badge.fill"
             }
         }
     }
@@ -92,6 +94,7 @@ struct FloatingControlPanelView: View {
                         .background(selectedTab == tab ? Color.coffeeBrown : Color.clear)
                         .foregroundStyle(selectedTab == tab ? Color.white : Color.coffeeDark)
                         .cornerRadius(4)
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
@@ -113,6 +116,8 @@ struct FloatingControlPanelView: View {
                         widgetsControlSection
                     case .unlockWindow:
                         unlockWindowControlSection
+                    case .bulletinBoard:
+                        bulletinBoardControlSection
                     }
                 }
                 .padding(14)
@@ -1028,6 +1033,359 @@ struct FloatingControlPanelView: View {
                             )
                             editorController.draftLayout.stickers.append(newItem)
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - 알림판 탭 섹션
+
+extension FloatingControlPanelView {
+    var bulletinBoardControlSection: some View {
+        BulletinBoardEditorSection(editorController: editorController)
+    }
+}
+
+/// 알림판 설정 에디터 (별도 뷰로 분리하여 @ObservedObject 적용)
+struct BulletinBoardEditorSection: View {
+    @ObservedObject var editorController: LockScreenEditorWindowController
+    @ObservedObject private var bulletinServer = BulletinSocketServer.shared
+
+    private let pixelFont = "Silkscreen-Regular"
+
+    private var config: Binding<BulletinBoardConfig> {
+        $editorController.draftLayout.bulletinBoardConfig
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+
+            // MARK: 1. 소켓 서버 활성화 및 상태
+            let isEnabled = config.isEnabled.wrappedValue
+
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .center) {
+                    Image(systemName: isEnabled ? "bell.badge.fill" : "bell.slash.fill")
+                        .font(.title2)
+                        .foregroundStyle(isEnabled ? Color.green : Color.gray)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("알림판 소켓 서버")
+                            .font(.custom(pixelFont, size: 11))
+                            .foregroundStyle(Color.primary)
+                        
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(isEnabled ? Color.green : Color.secondary)
+                                .frame(width: 7, height: 7)
+                            
+                            if isEnabled {
+                                Text("서버 ON")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundStyle(Color.green)
+                            } else {
+                                Text("서버 OFF (스위치를 켜면 작동합니다)")
+                                    .font(.system(size: 9.5, weight: .medium))
+                                    .foregroundStyle(Color.secondary)
+                            }
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    Toggle("", isOn: config.isEnabled)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                }
+
+                // MARK: 소켓 경로 및 터미널 전송 사용법 안내 (항상 고대비 노출)
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("소켓 경로 (Unix Domain Socket)")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(Color.primary)
+
+                    HStack(spacing: 6) {
+                        Text(editorController.draftLayout.bulletinBoardConfig.socketPath)
+                            .font(.system(size: 9.5, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(Color.green)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Spacer()
+                        
+                        // 1. 소켓 경로 단독 복사
+                        Button {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(
+                                editorController.draftLayout.bulletinBoardConfig.socketPath,
+                                forType: .string
+                            )
+                        } label: {
+                            HStack(spacing: 3) {
+                                Image(systemName: "doc.on.doc").font(.system(size: 8.5))
+                                Text("경로 복사").font(.system(size: 9, weight: .bold))
+                            }
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 4)
+                            .background(Color.blue)
+                            .foregroundStyle(.white)
+                            .cornerRadius(4)
+                        }
+                        .buttonStyle(.plain)
+
+                        // 2. 에라이전트 전용 프롬프트 종합 복사
+                        Button {
+                            let socketPath = editorController.draftLayout.bulletinBoardConfig.socketPath
+                            let style = editorController.draftLayout.bulletinBoardConfig.displayStyle.displayName
+                            let promptText = """
+                            [Coffee-Screen 알림판 연동 가이드]
+                            작업 완료나 주요 상태 변경 시 아래 Unix Domain Socket으로 메시지를 보내주세요.
+                            - 소켓 경로: \(socketPath)
+                            - 알림 스타일: \(style)
+                            - 메시지 전송 명령어 예시:
+                              • 성공: echo '{"text":"[작업명] 완료되었습니다!","level":"success"}' | nc -U \(socketPath)
+                              • 에러: echo '{"text":"[작업명] 실패하였습니다.","level":"error"}' | nc -U \(socketPath)
+                              • 일반: echo '{"text":"[작업명] 진행 중...","level":"info"}' | nc -U \(socketPath)
+                            - 지원 레벨(level): info (파랑), success (초록), warning (주황), error (빨강)
+                            """
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(promptText, forType: .string)
+                        } label: {
+                            HStack(spacing: 3) {
+                                Image(systemName: "text.bubble.fill").font(.system(size: 8.5))
+                                Text("🤖 에이전트 훅 복사").font(.system(size: 9, weight: .bold))
+                            }
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 4)
+                            .background(Color.purple)
+                            .foregroundStyle(.white)
+                            .cornerRadius(4)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(8)
+                    .background(Color.black.opacity(0.85))
+                    .cornerRadius(6)
+
+                    // 터미널 전송 가이드
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("💡 메시지 전송 방법 (터미널 / 외부 스크립트)")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(Color.primary)
+                        
+                        VStack(alignment: .leading, spacing: 6) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("# 1. 일반 텍스트 전송")
+                                    .font(.system(size: 8.5, weight: .semibold, design: .monospaced))
+                                    .foregroundStyle(Color.yellow)
+                                Text("echo 'Claude: 빌드 완료' | nc -U \(editorController.draftLayout.bulletinBoardConfig.socketPath)")
+                                    .font(.system(size: 8.5, weight: .regular, design: .monospaced))
+                                    .foregroundStyle(Color.white)
+                                    .textSelection(.enabled)
+                            }
+                            
+                            Divider().background(Color.white.opacity(0.3))
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("# 2. 메시지 등급(level) 지정 JSON 전송")
+                                    .font(.system(size: 8.5, weight: .semibold, design: .monospaced))
+                                    .foregroundStyle(Color.cyan)
+                                Text(#"echo '{"text":"성공!","level":"success"}' | nc -U "#
+                                     + editorController.draftLayout.bulletinBoardConfig.socketPath)
+                                    .font(.system(size: 8.5, weight: .regular, design: .monospaced))
+                                    .foregroundStyle(Color.white)
+                                    .textSelection(.enabled)
+                            }
+                        }
+                        .padding(8)
+                        .background(Color.black.opacity(0.9))
+                        .cornerRadius(6)
+                    }
+
+                    // MARK: Level(메시지 등급) 명확한 설명
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("📌 level(메시지 등급) 종류 안내")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(Color.primary)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "info.circle.fill").foregroundStyle(Color.blue)
+                                Text("info").font(.system(size: 9, weight: .bold, design: .monospaced)).foregroundStyle(Color.blue)
+                                Text("— 일반 안내 메시지 (기본값)").font(.system(size: 9)).foregroundStyle(Color.primary)
+                            }
+                            HStack(spacing: 6) {
+                                Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.green)
+                                Text("success").font(.system(size: 9, weight: .bold, design: .monospaced)).foregroundStyle(Color.green)
+                                Text("— 작업 성공 및 완료 알림").font(.system(size: 9)).foregroundStyle(Color.primary)
+                            }
+                            HStack(spacing: 6) {
+                                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(Color.orange)
+                                Text("warning").font(.system(size: 9, weight: .bold, design: .monospaced)).foregroundStyle(Color.orange)
+                                Text("— 주의 및 경고 상태 알림").font(.system(size: 9)).foregroundStyle(Color.primary)
+                            }
+                            HStack(spacing: 6) {
+                                Image(systemName: "xmark.circle.fill").foregroundStyle(Color.red)
+                                Text("error").font(.system(size: 9, weight: .bold, design: .monospaced)).foregroundStyle(Color.red)
+                                Text("— 에러 및 실패 상태 알림").font(.system(size: 9)).foregroundStyle(Color.primary)
+                            }
+                        }
+                        .padding(8)
+                        .background(Color.black.opacity(0.06))
+                        .cornerRadius(6)
+                    }
+                }
+            }
+
+            Divider()
+
+            // MARK: 2. 표시 스타일 선택
+            VStack(alignment: .leading, spacing: 10) {
+                Text("표시 스타일")
+                    .font(.custom(pixelFont, size: 11))
+                    .foregroundStyle(Color.coffeeDark)
+
+                Picker("", selection: config.displayStyle) {
+                    ForEach(BulletinDisplayStyle.allCases) { style in
+                        Label(style.displayName, systemImage: style.iconName).tag(style)
+                    }
+                }
+                .pickerStyle(.radioGroup)
+            }
+
+            Divider()
+
+            // MARK: 3. 메시지 옵션
+            VStack(alignment: .leading, spacing: 10) {
+                Text("메시지 옵션")
+                    .font(.custom(pixelFont, size: 11))
+                    .foregroundStyle(Color.coffeeDark)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("최대 표시 메시지 수").font(.caption)
+                        Spacer()
+                        Text("\(editorController.draftLayout.bulletinBoardConfig.maxMessages)개")
+                            .font(.caption).foregroundStyle(.gray)
+                    }
+                    Slider(
+                        value: Binding(
+                            get: { Double(editorController.draftLayout.bulletinBoardConfig.maxMessages) },
+                            set: { editorController.draftLayout.bulletinBoardConfig.maxMessages = Int($0) }
+                        ),
+                        in: 1...10, step: 1
+                    )
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("자동 사라짐").font(.caption)
+                        Spacer()
+                        let dur = editorController.draftLayout.bulletinBoardConfig.autoDismissDuration
+                        Text(dur == 0 ? "OFF" : "\(Int(dur))초")
+                            .font(.caption).foregroundStyle(.gray)
+                    }
+                    Slider(value: config.autoDismissDuration, in: 0...30, step: 1)
+                    Text("0 = 자동 사라짐 없음")
+                        .font(.caption2).foregroundStyle(.secondary)
+                }
+            }
+
+            // 픽셀 텍스트 전용 옵션
+            if editorController.draftLayout.bulletinBoardConfig.displayStyle == .pixelText {
+                Divider()
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("픽셀 텍스트 옵션")
+                        .font(.custom(pixelFont, size: 11))
+                        .foregroundStyle(Color.coffeeDark)
+
+                    HStack {
+                        Text("글자 색상").font(.caption)
+                        Spacer()
+                        ColorPicker("", selection: Binding(
+                            get: { editorController.draftLayout.bulletinBoardConfig.fontColor },
+                            set: { editorController.draftLayout.bulletinBoardConfig.fontColorHex = $0.toHex() }
+                        ))
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text("글자 크기").font(.caption)
+                            Spacer()
+                            Text("\(Int(editorController.draftLayout.bulletinBoardConfig.fontSize))pt")
+                                .font(.caption).foregroundStyle(.gray)
+                        }
+                        Slider(value: config.fontSize, in: 10...48, step: 2)
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text("Y 위치").font(.caption)
+                            Spacer()
+                            Text("\(Int(editorController.draftLayout.bulletinBoardConfig.positionY))px")
+                                .font(.caption).foregroundStyle(.gray)
+                        }
+                        Slider(value: config.positionY, in: -500...500, step: 5)
+                    }
+                }
+            }
+
+            Divider()
+
+            // MARK: 4. 테스트 & 초기화
+            VStack(alignment: .leading, spacing: 8) {
+                Text("테스트")
+                    .font(.custom(pixelFont, size: 11))
+                    .foregroundStyle(Color.coffeeDark)
+                HStack(spacing: 8) {
+                    Button("테스트 메시지 전송") {
+                        bulletinServer.sendTestMessage(
+                            style: editorController.draftLayout.bulletinBoardConfig.displayStyle
+                        )
+                    }
+                    .buttonStyle(.pixel)
+                    .font(.system(size: 10))
+
+                    Button("메시지 초기화") {
+                        bulletinServer.clearMessages()
+                    }
+                    .buttonStyle(.pixelSecondary)
+                    .font(.system(size: 10))
+                }
+            }
+
+            // MARK: 5. 수신 메시지 히스토리
+            if !bulletinServer.messages.isEmpty {
+                Divider()
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("수신된 메시지")
+                            .font(.custom(pixelFont, size: 10))
+                            .foregroundStyle(Color.coffeeDark)
+                        Spacer()
+                        Text("\(bulletinServer.messages.count)개")
+                            .font(.caption2).foregroundStyle(.secondary)
+                    }
+                    ForEach(bulletinServer.messages) { msg in
+                        HStack(alignment: .top, spacing: 6) {
+                            Image(systemName: msg.level.iconName)
+                                .font(.caption2)
+                                .foregroundStyle(msg.level.color)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(msg.text)
+                                    .font(.caption2)
+                                    .foregroundStyle(.primary)
+                                    .lineLimit(2)
+                                Text(msg.timestamp, style: .time)
+                                    .font(.system(size: 8))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding(6)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.white.opacity(0.5))
+                        .cornerRadius(4)
                     }
                 }
             }

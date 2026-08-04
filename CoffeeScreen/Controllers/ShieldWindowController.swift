@@ -56,6 +56,9 @@ final class ShieldWindowController {
         // 이미 표시 중이면 무시
         guard !isShowing else { return }
 
+        // 잠금 화면 실행 순간 기존 이전 알림판 메시지 자동 청소
+        BulletinSocketServer.shared.clearMessages()
+
         currentViewModel = viewModel
 
         // 현재 화면 구성으로 쉴드 구성

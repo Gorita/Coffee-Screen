@@ -341,6 +341,8 @@ struct LockScreenLayout: Codable, Equatable {
         fontSize: 14
     )
 
+    var bulletinBoardConfig: BulletinBoardConfig = BulletinBoardConfig()
+
     var backgroundColor: Color {
         Color(hex: backgroundColorHex) ?? .black
     }

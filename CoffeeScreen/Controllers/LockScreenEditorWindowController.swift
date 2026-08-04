@@ -149,6 +149,7 @@ final class LockScreenEditorWindowController: NSObject, ObservableObject, NSWind
 /// 라이브 전체 화면 렌더링 뷰 (draftLayout 수신 & 스티커 마우스 직접 드래그앤드롭 지원)
 struct LiveShieldPreviewView: View {
     @ObservedObject var editorController: LockScreenEditorWindowController
+    @ObservedObject private var bulletinServer = BulletinSocketServer.shared
     @StateObject private var dummyShieldViewModel = ShieldViewModel()
     @State private var currentTime = Date()
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -173,6 +174,11 @@ struct LiveShieldPreviewView: View {
                 widgetsLayer
                     .allowsHitTesting(false)
                     .zIndex(20)
+
+                // 5. 알림판 레이어 (최상단)
+                bulletinBoardPreviewLayer
+                    .allowsHitTesting(false)
+                    .zIndex(30)
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
             .clipped()
@@ -287,6 +293,102 @@ struct LiveShieldPreviewView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
         return formatter.string(from: currentTime)
+    }
+
+    // MARK: - 알림판 프리뷰 레이어
+
+    @ViewBuilder
+    var bulletinBoardPreviewLayer: some View {
+        let cfg = editorController.draftLayout.bulletinBoardConfig
+        if !bulletinServer.messages.isEmpty {
+            switch cfg.displayStyle {
+            case .alert:
+                VStack(alignment: .trailing, spacing: 8) {
+                    ForEach(bulletinServer.messages) { msg in
+                        AlertCard(message: msg)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .transition(.asymmetric(
+                                insertion: .move(edge: .trailing).combined(with: .opacity),
+                                removal: .opacity
+                            ))
+                    }
+                }
+                .padding(20)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: bulletinServer.messages.map(\.id))
+
+            case .terminal:
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(spacing: 6) {
+                        Circle().fill(Color(hex: "#FF5F57") ?? .red).frame(width: 8, height: 8)
+                        Circle().fill(Color(hex: "#FFBD2E") ?? .yellow).frame(width: 8, height: 8)
+                        Circle().fill(Color(hex: "#28C840") ?? .green).frame(width: 8, height: 8)
+                        Spacer()
+                        Text("coffee-screen — 알림판")
+                            .font(.system(size: 9, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.6))
+                        Spacer()
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Color(hex: "#3A3A3A") ?? .gray)
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        ForEach(bulletinServer.messages.reversed()) { msg in
+                            HStack(alignment: .top, spacing: 6) {
+                                Text(timeString(from: msg.timestamp))
+                                    .font(.system(size: 10, design: .monospaced))
+                                    .foregroundStyle(.white.opacity(0.4))
+                                Text(levelPrefix(msg.level))
+                                    .font(.system(size: 10, design: .monospaced))
+                                    .foregroundStyle(msg.level.color)
+                                Text(msg.text)
+                                    .font(.system(size: 11, design: .monospaced))
+                                    .foregroundStyle(.white)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                    }
+                    .padding(10)
+                }
+                .background(Color.black.opacity(0.85))
+                .cornerRadius(8)
+                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(.white.opacity(0.12), lineWidth: 1))
+                .frame(maxWidth: 420)
+                .padding(20)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: bulletinServer.messages.map(\.id))
+
+            case .pixelText:
+                let visibleMessages = Array(bulletinServer.messages.prefix(cfg.maxMessages))
+                VStack(spacing: 6) {
+                    ForEach(visibleMessages) { msg in
+                        Text(msg.text)
+                            .font(.custom(pixelFont, size: cfg.fontSize))
+                            .foregroundStyle(msg.id == visibleMessages.first?.id ? cfg.fontColor : cfg.fontColor.opacity(0.6))
+                            .shadow(color: .black.opacity(0.8), radius: 4, x: 0, y: 2)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 20)
+                            .transition(.opacity)
+                    }
+                }
+                .offset(x: cfg.positionX, y: cfg.positionY)
+                .animation(.easeInOut(duration: 0.4), value: bulletinServer.messages.map(\.id))
+            }
+        }
+    }
+
+    private func timeString(from date: Date) -> String {
+        let f = DateFormatter(); f.dateFormat = "HH:mm:ss"; return f.string(from: date)
+    }
+
+    private func levelPrefix(_ level: BulletinMessageLevel) -> String {
+        switch level {
+        case .info:    return "[INFO]"
+        case .success: return "[OK]  "
+        case .warning: return "[WARN]"
+        case .error:   return "[ERR] "
+        }
     }
 }
 

@@ -10,6 +10,8 @@ final class LockScreenSettingsManager: ObservableObject {
     @Published var layout: LockScreenLayout = LockScreenLayout() {
         didSet {
             saveLayout()
+            // 알림판 소켓 서버 설정 변경 반영
+            BulletinSocketServer.shared.applyConfig(layout.bulletinBoardConfig)
         }
     }
 
@@ -35,6 +37,8 @@ final class LockScreenSettingsManager: ObservableObject {
         print("[DEBUG][LockScreenSettingsManager] Initializing LockScreenSettingsManager...")
         createDirectoriesIfNeeded()
         loadLayout()
+        // 저장된 설정으로 소켓 서버 초기화
+        BulletinSocketServer.shared.applyConfig(layout.bulletinBoardConfig)
     }
 
     // MARK: - Directory Management
