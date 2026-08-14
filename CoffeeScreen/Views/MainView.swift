@@ -34,9 +34,11 @@ struct MainView: View {
     }
 
     private let pixelFont = "Silkscreen-Regular"
+    @State private var isShowingSupportModal: Bool = false
 
     var body: some View {
-        VStack(spacing: 24) {
+        ZStack {
+            VStack(spacing: 24) {
             // App icon and title (clickable to toggle background)
             VStack(spacing: 8) {
                 Button {
@@ -174,20 +176,50 @@ struct MainView: View {
                 }
                 .foregroundStyle(.orange)
             }
-        }
-        .animation(.easeInOut(duration: 0.25), value: pinSettingsViewModel.isPINSet)
-        .padding(24)
-        .frame(minWidth: 320, maxWidth: .infinity, maxHeight: .infinity)
-        .background(
-            Group {
-                if backgroundStyle == .vintageGrid {
-                    VintageGridBackground()
-                } else {
-                    PixelArtBackground()
+
+            // Buy Me a Coffee support button
+            Button {
+                isShowingSupportModal = true
+            } label: {
+                HStack(spacing: 6) {
+                    Text("☕")
+                    Text("Buy Me a Coffee")
+                        .font(.custom(pixelFont, size: 10))
                 }
             }
-            .ignoresSafeArea()
-        )
+            .buttonStyle(.pixelSecondary)
+            }
+            .animation(.easeInOut(duration: 0.25), value: pinSettingsViewModel.isPINSet)
+            .padding(24)
+            .frame(minWidth: 320, maxWidth: .infinity, maxHeight: .infinity)
+            .background(
+                Group {
+                    if backgroundStyle == .vintageGrid {
+                        VintageGridBackground()
+                    } else {
+                        PixelArtBackground()
+                    }
+                }
+                .ignoresSafeArea()
+            )
+
+            // Custom Support Modal Overlay (Tap outside to dismiss)
+            if isShowingSupportModal {
+                Color.black.opacity(0.45)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                            isShowingSupportModal = false
+                        }
+                    }
+
+                SupportCoffeeModalView(isPresented: $isShowingSupportModal)
+                    .transition(.scale(scale: 0.95).combined(with: .opacity))
+                    .zIndex(10)
+            }
+        }
+        .animation(.spring(response: 0.25, dampingFraction: 0.8), value: isShowingSupportModal)
     }
 }
 

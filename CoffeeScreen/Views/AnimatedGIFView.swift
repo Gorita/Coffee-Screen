@@ -9,15 +9,21 @@ struct AnimatedGIFView: NSViewRepresentable {
     func makeNSView(context: Context) -> NSImageView {
         let imageView = NSImageView()
         imageView.imageScaling = (contentMode == .fill) ? .scaleAxesIndependently : .scaleProportionallyUpOrDown
+        imageView.imageAlignment = .alignCenter
         imageView.animates = true
         imageView.canDrawSubviewsIntoLayer = true
         imageView.wantsLayer = true
+        imageView.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        imageView.setContentHuggingPriority(.defaultLow, for: .vertical)
+        imageView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        imageView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
         updateImage(imageView: imageView)
         return imageView
     }
 
     func updateNSView(_ nsView: NSImageView, context: Context) {
         nsView.imageScaling = (contentMode == .fill) ? .scaleAxesIndependently : .scaleProportionallyUpOrDown
+        nsView.imageAlignment = .alignCenter
         updateImage(imageView: nsView)
     }
 
@@ -32,7 +38,6 @@ struct AnimatedGIFView: NSViewRepresentable {
 
         guard FileManager.default.fileExists(atPath: fileURL.path) else { return }
 
-        // 이전 파일과 다른 경우에만 이미지 재경신
         if imageView.tag != fileURL.path.hashValue {
             imageView.tag = fileURL.path.hashValue
             if let image = NSImage(contentsOf: fileURL) {
