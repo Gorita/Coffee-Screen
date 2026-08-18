@@ -37,10 +37,21 @@ final class MainViewModel: ObservableObject {
     // MARK: - Initialization
 
     init() {
+        setupPowerControllerObservation()
         setupEmergencyEscape()
         setupLockHotkey()
         setupStatusBar()
         observePINChanges()
+    }
+
+    /// PowerController 프로세스 생존 상태 실시간 동기화 (커널 이벤트 기반)
+    private func setupPowerControllerObservation() {
+        powerController.onStateChange = { [weak self] isRunning in
+            guard let self else { return }
+            self.isStandaloneAwake = isRunning && !self.appState.isLocked
+            self.appState.isAwake = isRunning
+            self.updateStatusBar()
+        }
     }
 
     /// PIN 변경 알림 구독
@@ -117,16 +128,9 @@ final class MainViewModel: ObservableObject {
     func startStandaloneAwake() {
         // 이미 잠금 상태면 무시
         guard !appState.isLocked else { return }
-
         let result = powerController.startAwake()
-        switch result {
-        case .success:
-            isStandaloneAwake = true
-            appState.isAwake = true
-            updateStatusBar()
-        case .failure(let error):
+        if case .failure(let error) = result {
             appState.lastError = error.localizedDescription
-            isStandaloneAwake = false
         }
     }
 
@@ -134,11 +138,7 @@ final class MainViewModel: ObservableObject {
     func stopStandaloneAwake() {
         // 잠금 상태면 무시 (잠금 해제 시 자동으로 처리됨)
         guard !appState.isLocked else { return }
-
         powerController.stopAwake()
-        isStandaloneAwake = false
-        appState.isAwake = false
-        updateStatusBar()
     }
 
     // MARK: - State Accessors
