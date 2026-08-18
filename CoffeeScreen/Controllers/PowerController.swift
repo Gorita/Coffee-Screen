@@ -1,16 +1,13 @@
 import Foundation
-import IOKit.pwr_mgt
 
 /// 시스템 수면 및 화면 꺼짐 방지를 관리하는 컨트롤러
-/// 최신 IOKit Power Assertion 및 ProcessInfo Activity를 이중으로 사용하여
-/// macOS Sonoma/Sequoia 등 모든 환경에서 안정적인 Keep-Awake를 보장합니다.
+/// macOS 내장 `/usr/bin/caffeinate` 서브프로세스를 활용하여
+/// OS 레벨에서 가장 강력하고 안정적인 Keep-Awake를 보장합니다.
 final class PowerController {
 
     // MARK: - Properties
 
-    private var displayAssertionID: IOPMAssertionID = 0
-    private var idleAssertionID: IOPMAssertionID = 0
-    private var processActivityToken: NSObjectProtocol?
+    private var caffeinateProcess: Process?
 
     /// 현재 수면 방지가 활성화되어 있는지 여부
     private(set) var isActive: Bool = false
@@ -19,63 +16,40 @@ final class PowerController {
 
     /// 시스템 수면 방지 및 화면 꺼짐 방지 시작
     /// - Returns: 성공 시 .success, 실패 시 .failure(PowerError)
+    @discardableResult
     func startAwake() -> Result<Void, PowerError> {
-        // 이미 활성화된 경우 기존 assertion 해제 후 재생성
+        // 이미 활성화되어 실행 중인 경우 기존 프로세스 정리 후 재시작
         if isActive {
             stopAwake()
         }
 
-        let reason = "Coffee-Screen: User requested screen and sleep protection" as CFString
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/caffeinate")
         
-        // 1. 디스플레이 꺼짐 방지 (최신 macOS 표준: PreventUserIdleDisplaySleep)
-        let displayResult = IOPMAssertionCreateWithName(
-            kIOPMAssertionTypePreventUserIdleDisplaySleep as CFString,
-            IOPMAssertionLevel(kIOPMAssertionLevelOn),
-            reason,
-            &displayAssertionID
-        )
+        // -d: 디스플레이 꺼짐 방지 (Prevent display sleep)
+        // -i: 시스템 유휴 잠자기 방지 (Prevent idle sleep)
+        // -m: 디스크 유휴 절전 방지 (Prevent disk idle sleep)
+        // -u: 사용자 활성 상태 선언 (Declare user active)
+        process.arguments = ["-d", "-i", "-m", "-u"]
 
-        // 2. 시스템 유휴 잠자기 방지 (최신 macOS 표준: PreventUserIdleSystemSleep)
-        let idleResult = IOPMAssertionCreateWithName(
-            kIOPMAssertionTypePreventUserIdleSystemSleep as CFString,
-            IOPMAssertionLevel(kIOPMAssertionLevelOn),
-            reason,
-            &idleAssertionID
-        )
-
-        // 3. ProcessInfo Activity를 통한 App Nap 및 백그라운드 쓰로틀링 방지 이중 방어
-        processActivityToken = ProcessInfo.processInfo.beginActivity(
-            options: [.userInitiated, .idleDisplaySleepDisabled, .idleSystemSleepDisabled],
-            reason: "Coffee-Screen: Standalone Keep-Awake Process Activity"
-        )
-
-        if displayResult == kIOReturnSuccess && idleResult == kIOReturnSuccess {
-            isActive = true
+        do {
+            try process.run()
+            self.caffeinateProcess = process
+            self.isActive = true
             return .success(())
-        } else {
-            // 하나라도 실패하면 정리 후 실패 반환
-            stopAwake()
+        } catch {
+            self.caffeinateProcess = nil
+            self.isActive = false
             return .failure(.assertionCreationFailed)
         }
     }
 
     /// 시스템 수면 및 화면 꺼짐 방지 해제
     func stopAwake() {
-        if displayAssertionID != 0 {
-            IOPMAssertionRelease(displayAssertionID)
-            displayAssertionID = 0
+        if let process = caffeinateProcess, process.isRunning {
+            process.terminate()
         }
-        
-        if idleAssertionID != 0 {
-            IOPMAssertionRelease(idleAssertionID)
-            idleAssertionID = 0
-        }
-
-        if let token = processActivityToken {
-            ProcessInfo.processInfo.endActivity(token)
-            processActivityToken = nil
-        }
-
+        caffeinateProcess = nil
         isActive = false
     }
 
@@ -95,9 +69,9 @@ enum PowerError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .assertionCreationFailed:
-            return "시스템 수면 방지 활성화에 실패했습니다."
+            return "시스템 수면 방지(caffeinate) 활성화에 실패했습니다."
         case .assertionReleaseFailed:
-            return "시스템 수면 방지 해제에 실패했습니다."
+            return "시스템 수면 방지(caffeinate) 해제에 실패했습니다."
         }
     }
 }
