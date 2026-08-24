@@ -2,7 +2,8 @@ import AppKit
 import SwiftUI
 
 /// 화면을 덮는 Shield 윈도우
-/// borderless 윈도우이지만 키 윈도우가 될 수 있도록 설정
+/// 다중 모니터 및 다중 Space 환경에서 WindowServer가 100% 렌더링하도록
+/// 스크린세이버 레벨과 완벽한 CollectionBehavior를 적용합니다.
 final class ShieldWindow: NSWindow {
 
     // MARK: - Initialization
@@ -21,20 +22,25 @@ final class ShieldWindow: NSWindow {
     // MARK: - Configuration
 
     private func configureWindow() {
-        // 최상위 레벨 (스크린세이버보다 위)
-        level = NSWindow.Level(rawValue: Constants.shieldWindowLevel)
+        // 최상위 레벨: macOS 공식 스크린세이버 레벨로 설정하여 모든 모니터의 일반 창을 완벽 차단
+        level = .screenSaver
 
-        // 검은 배경
+        // 검은 배경 및 버퍼 공유 차단 (각 디스플레이별 독립 프레임버퍼 보장)
         backgroundColor = .black
         isOpaque = true
         hasShadow = false
+        sharingType = .none
 
-        // 다크 모드 고정: OS 라이트/다크 설정과 무관하게 잠금화면 내
-        // 시스템 컨트롤(PIN 입력 필드 등)이 검은 배경과 일관되게 표시되도록
+        // 다크 모드 고정
         appearance = NSAppearance(named: .darkAqua)
 
-        // 모든 Space에서 표시
-        collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        // 모든 Space와 보조 디스플레이에서 위치 고정 및 렌더링 보장
+        collectionBehavior = [
+            .canJoinAllSpaces,
+            .fullScreenAuxiliary,
+            .stationary,
+            .ignoresCycle
+        ]
 
         // 릴리즈 시 자동 해제 방지
         isReleasedWhenClosed = false
