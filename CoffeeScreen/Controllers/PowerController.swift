@@ -2,7 +2,8 @@ import Foundation
 
 /// 시스템 수면 및 화면 꺼짐 방지를 관리하는 컨트롤러
 /// macOS 내장 `/usr/bin/caffeinate` 서브프로세스를 활용하며,
-/// OS 커널의 `terminationHandler` 이벤트를 기반으로 실제 프로세스 생존 상태를 무부하(0% CPU)로 실시간 동기화합니다.
+/// 부모 프로세스 생명주기(-w <PID>)를 결합하고 OS 커널의 `terminationHandler` 이벤트를 기반으로
+/// 무부하(0% CPU) 및 고아 프로세스 원천 방지를 보장합니다.
 final class PowerController {
 
     // MARK: - Properties
@@ -38,11 +39,14 @@ final class PowerController {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/caffeinate")
         
+        let parentPID = ProcessInfo.processInfo.processIdentifier
+        
         // -d: 디스플레이 꺼짐 방지 (Prevent display sleep)
         // -i: 시스템 유휴 잠자기 방지 (Prevent idle sleep)
         // -m: 디스크 유휴 절전 방지 (Prevent disk idle sleep)
         // -u: 사용자 활성 상태 선언 (Declare user active)
-        process.arguments = ["-d", "-i", "-m", "-u"]
+        // -w <PID>: 부모 프로세스가 종료되면 OS 커널이 caffeinate를 즉시 자동 회수 (고아 방지)
+        process.arguments = ["-d", "-i", "-m", "-u", "-w", "\(parentPID)"]
 
         // 커널 레벨 프로세스 종료 이벤트 감시 (무부하 0% CPU 이벤트 방식)
         process.terminationHandler = { [weak self] _ in

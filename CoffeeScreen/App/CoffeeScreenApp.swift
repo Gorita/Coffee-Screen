@@ -33,12 +33,13 @@ struct CoffeeScreenApp: App {
     @StateObject private var mainViewModel = MainViewModel()
 
     var body: some Scene {
-        WindowGroup(id: "main") {
+        Window("Coffee-Screen", id: "main") {
             MainView()
                 .environmentObject(mainViewModel)
                 .background(WindowAccessor())
         }
         .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentSize)
         .defaultSize(width: 400, height: 300)
         .commands {
             CommandGroup(replacing: .newItem) { }
@@ -76,11 +77,11 @@ struct WindowAccessor: NSViewRepresentable {
 /// 앱 델리게이트
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        if !flag {
-            for window in sender.windows where !(window is ShieldWindow) {
-                window.makeKeyAndOrderFront(self)
-                return true
-            }
+        // 숨겨진 메인 윈도우를 다시 화면 맨 앞으로 표시 (중복 창 생성 방지)
+        for window in sender.windows where !(window is ShieldWindow) && !(window is NSPanel) {
+            window.makeKeyAndOrderFront(self)
+            NSApp.activate(ignoringOtherApps: true)
+            return true
         }
         return true
     }
