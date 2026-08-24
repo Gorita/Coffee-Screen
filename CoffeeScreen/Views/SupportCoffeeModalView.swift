@@ -26,7 +26,7 @@ struct SupportCoffeeModalView: View {
             }
             
             // Subtitle
-            Text("Coffee-Screen 개발자에게 커피 한 잔을 후원해주세요!\n스마트폰 카메라로 아래 QR을 비추면 바로 송금됩니다.")
+            Text("Coffee-Screen 개발자에게 커피 한 잔을 선물해 주세요 ☕\n이 신기한 QR코드가 동작하는지 qr 인식 카메라로 확인해 볼까요?")
                 .font(.system(size: 12))
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
