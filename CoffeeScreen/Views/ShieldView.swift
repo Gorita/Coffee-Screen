@@ -37,6 +37,8 @@ struct ShieldView: View {
             .frame(width: geometry.size.width, height: geometry.size.height)
             .clipped()
         }
+        .contentShape(Rectangle())
+        .onTapGesture { }
         .ignoresSafeArea()
         .onReceive(timer) { input in
             currentTime = input

@@ -2,8 +2,8 @@ import AppKit
 import SwiftUI
 
 /// 다중 모니터 Shield 윈도우를 관리하는 컨트롤러
-/// WindowServer가 보조 디스플레이를 누락하지 않도록
-/// 주 모니터 윈도우와의 부모-자식(Child Window) 계층 결합 및 강제 렌더링을 수행합니다.
+/// 각 모니터마다 독립적인 Top-Level 스크린세이버 윈도우를 띄워
+/// macOS 15의 독립 Space 환경에서도 크래시 없이 100% 화면을 덮습니다.
 @MainActor
 final class ShieldWindowController {
 
@@ -11,9 +11,6 @@ final class ShieldWindowController {
 
     /// displayID → Shield 윈도우 매핑
     private var shieldWindows: [CGDirectDisplayID: ShieldWindow] = [:]
-
-    /// 주 모니터의 Shield 윈도우 (자식 윈도우 결합의 부모 기준점)
-    private var mainShieldWindow: ShieldWindow?
 
     /// 모니터 변경 감지 옵저버 (nonisolated access를 위해 별도 저장)
     private nonisolated(unsafe) var screenObserver: NSObjectProtocol?
@@ -78,14 +75,6 @@ final class ShieldWindowController {
         stopPolling()
         currentViewModel?.removeKeyMonitor()
 
-        // 부모-자식 계층 분리 후 닫기
-        if let main = mainShieldWindow {
-            for child in main.childWindows ?? [] {
-                main.removeChildWindow(child)
-            }
-        }
-        mainShieldWindow = nil
-
         shieldWindows.values.forEach { $0.close() }
         shieldWindows.removeAll()
         currentViewModel = nil
@@ -105,50 +94,32 @@ final class ShieldWindowController {
 
         // 1. 사라진 화면의 쉴드 정리
         for (id, window) in shieldWindows where !currentIDs.contains(id) {
-            if let main = mainShieldWindow, window != main {
-                main.removeChildWindow(window)
-            }
             window.close()
             shieldWindows.removeValue(forKey: id)
         }
 
-        // 2. 주 모니터(Main Screen) 윈도우 먼저 생성/배치
+        // 2. 모든 연결된 모니터에 대해 독립적인 Shield 윈도우 생성/배치 (addChildWindow 없이 안전한 독립 윈도우)
         let mainScreen = NSScreen.main ?? currentScreens.first
-        if let mainScreen, let mainID = mainScreen.displayID {
-            let mainWindow: ShieldWindow
-            if let existing = shieldWindows[mainID] {
-                existing.setFrame(mainScreen.frame, display: true)
-                mainWindow = existing
-            } else {
-                mainWindow = createShieldWindow(for: mainScreen, with: viewModel)
-                shieldWindows[mainID] = mainWindow
-            }
-            mainShieldWindow = mainWindow
-            mainWindow.makeKeyAndOrderFront(nil)
-            mainWindow.orderFrontRegardless()
-            mainWindow.displayIfNeeded()
-        }
-
-        // 3. 보조 모니터(Secondary Screens) 윈도우 생성 및 부모 윈도우 결합
-        for screen in currentScreens where screen != mainScreen {
+        for screen in currentScreens {
             guard let id = screen.displayID else { continue }
 
-            let secondaryWindow: ShieldWindow
+            let window: ShieldWindow
             if let existing = shieldWindows[id] {
                 existing.setFrame(screen.frame, display: true)
-                secondaryWindow = existing
+                window = existing
             } else {
-                secondaryWindow = createShieldWindow(for: screen, with: viewModel)
-                shieldWindows[id] = secondaryWindow
+                window = createShieldWindow(for: screen, with: viewModel)
+                shieldWindows[id] = window
             }
 
-            // WindowServer가 보조 디스플레이 렌더링을 생략하지 않도록 부모-자식 결합
-            if let parent = mainShieldWindow, !(parent.childWindows ?? []).contains(secondaryWindow) {
-                parent.addChildWindow(secondaryWindow, ordered: .above)
-            }
+            // 모든 모니터의 윈도우를 독립적으로 최상단에 렌더링
+            window.orderFrontRegardless()
+            window.displayIfNeeded()
 
-            secondaryWindow.orderFrontRegardless()
-            secondaryWindow.displayIfNeeded()
+            // 주 모니터의 윈도우는 키 윈도우로 포커스
+            if screen == mainScreen {
+                window.makeKeyAndOrderFront(nil)
+            }
         }
 
         // 앱을 최상위로 활성화

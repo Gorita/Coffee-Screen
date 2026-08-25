@@ -2,8 +2,8 @@ import AppKit
 import SwiftUI
 
 /// 화면을 덮는 Shield 윈도우
-/// 다중 모니터 및 다중 Space 환경에서 WindowServer가 100% 렌더링하도록
-/// 스크린세이버 레벨과 완벽한 CollectionBehavior를 적용합니다.
+/// 다중 모니터 및 독립 Space 환경에서 WindowServer가 100% 렌더링하고
+/// 포커스 이동 시에도 숨겨지지 않도록 스크린세이버 레벨과 완벽한 플래그를 적용합니다.
 final class ShieldWindow: NSWindow {
 
     // MARK: - Initialization
@@ -30,6 +30,12 @@ final class ShieldWindow: NSWindow {
         isOpaque = true
         hasShadow = false
         sharingType = .none
+
+        // 포커스가 다른 앱이나 모니터로 이동해도 잠금 창이 절대 숨겨지지 않음
+        hidesOnDeactivate = false
+
+        // 마우스 이벤트를 잠금 창이 직접 수신하여 데스크탑으로 클릭 유출 방지
+        ignoresMouseEvents = false
 
         // 다크 모드 고정
         appearance = NSAppearance(named: .darkAqua)
