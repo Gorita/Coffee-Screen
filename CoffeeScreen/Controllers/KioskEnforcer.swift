@@ -38,7 +38,9 @@ final class KioskEnforcer {
         previousOptions = NSApp.presentationOptions
 
         // 키오스크 옵션 적용 (.hideDock, .hideMenuBar 등)
-        // setActivationPolicy(.accessory)는 Dock 데몬 캐시 누적 버그를 유발하므로 호출하지 않음
+        // 참고: 앱이 Info.plist의 LSUIElement=true(Accessory 정책)로 상시 구동되므로
+        // 런타임에 setActivationPolicy를 토글할 필요 없이 모든 모니터의 쉴드가 100% 합성됩니다.
+        // 런타임 setActivationPolicy 토글은 Dock 데몬 캐시 누적 버그를 유발하므로 절대 추가하지 마십시오.
         NSApp.presentationOptions = kioskOptions
 
         // 앱을 최상위로 강제 활성화

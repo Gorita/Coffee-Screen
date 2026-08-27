@@ -13,8 +13,8 @@ packages:
 
 settings:
   base:
-    MARKETING_VERSION: "1.2.4"
-    CURRENT_PROJECT_VERSION: "16"
+    MARKETING_VERSION: "1.2.5"
+    CURRENT_PROJECT_VERSION: "17"
     SWIFT_VERSION: "5.9"
     MACOSX_DEPLOYMENT_TARGET: "14.0"
   configs:
@@ -58,9 +58,9 @@ targets:
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         LSMinimumSystemVersion: "$(MACOSX_DEPLOYMENT_TARGET)"
+        LSUIElement: true
         NSMainStoryboardFile: ""
         NSPrincipalClass: NSApplication
-        LSUIElement: false
         SUFeedURL: https://github.com/Gorita/coffee-screen/releases/latest/download/appcast.xml
         SUPublicEDKey: r7G7qPl0ex2xKw562WGzpAIFC+I33JC9nyxcweEFmNE=
         SUEnableAutomaticChecks: true
