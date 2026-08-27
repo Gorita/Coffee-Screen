@@ -725,7 +725,7 @@ struct AwakeCharacterView: View {
     var body: some View {
         ZStack(alignment: .topLeading) {
             // 캐릭터 영역
-            ZStack(alignment: .bottom) {
+            ZStack {
                 // 1. 스티브 & 농민 (기존과 100% 동일한 위치와 중앙 정렬)
                 HStack(alignment: .bottom, spacing: 20) {
                     // 스티브 (책상 포함해서 원본 크기)
@@ -763,7 +763,7 @@ struct AwakeCharacterView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
 
-                // 2. 돌맹이 (던지기 애니메이션 - 스티브에서 농민으로의 완벽한 원래 궤적)
+                // 2. 돌맹이 (던지기 애니메이션 - 스티브 손에서 농민 머리로의 완벽한 원래 궤적)
                 if isAwake && projectileVisible {
                     Circle()
                         .fill(Color.gray)
