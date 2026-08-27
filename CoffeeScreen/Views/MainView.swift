@@ -726,8 +726,8 @@ struct AwakeCharacterView: View {
         ZStack(alignment: .topLeading) {
             // 캐릭터 영역
             ZStack {
-                HStack(alignment: .bottom, spacing: 10) {
-                    // 1. 스티브 (책상 포함)
+                HStack(alignment: .bottom, spacing: 20) {
+                    // 1. 스티브 (책상 포함해서 원본 크기)
                     ZStack(alignment: .topTrailing) {
                         Canvas { context, size in
                             if isAwake {
@@ -736,7 +736,7 @@ struct AwakeCharacterView: View {
                                 drawSleepySteve(context: context, size: size)
                             }
                         }
-                        .frame(width: 105, height: 70)
+                        .frame(width: 120, height: 70)
 
                         // 말풍선 (Awake 상태일 때만)
                         if isAwake {
@@ -746,7 +746,7 @@ struct AwakeCharacterView: View {
                         }
                     }
 
-                    // 2. 농민 (주민)
+                    // 2. 농민 (주민 - 원본 크기 & 위치 복구)
                     Canvas { context, size in
                         if isAwake {
                             if animationFrame == 0 {
@@ -758,27 +758,21 @@ struct AwakeCharacterView: View {
                             drawVillager(context: context, size: size)
                         }
                     }
-                    .frame(width: 65, height: 70)
+                    .frame(width: 90, height: 70)
 
-                    // 3. 기여자 캐릭터 (준혁님 - 절대 자지 않고 춤추는 캐릭터)
+                    // 3. 기여자 캐릭터 (준혁님 - OFF일 땐 우측 벽에서 빼꼼 👀, ON일 땐 신나는 디스코 댄스 ☝️🕺)
                     Canvas { context, size in
                         if isAwake {
-                            // ON일 때: 신나는 하늘 찌르기 디스코 댄스 ☝️
                             if animationFrame == 0 {
                                 drawContributorSkyDanceFrame1(context: context, size: size)
                             } else {
                                 drawContributorSkyDanceFrame2(context: context, size: size)
                             }
                         } else {
-                            // OFF일 때: 자지 않고 리듬 타며 추는 엉덩이 춤 🎵
-                            if animationFrame == 0 {
-                                drawContributorHipDanceFrame1(context: context, size: size)
-                            } else {
-                                drawContributorHipDanceFrame2(context: context, size: size)
-                            }
+                            drawContributorPeeking(context: context, size: size)
                         }
                     }
-                    .frame(width: 70, height: 70)
+                    .frame(width: 50, height: 70)
                 }
 
                 // 돌맹이 (던지기 애니메이션 - 포물선)
@@ -1448,167 +1442,65 @@ struct AwakeCharacterView: View {
         drawPixels(context: context, pixels: shoePixels, color: shoeColor, p: p, offsetX: offsetX, offsetY: offsetY)
     }
 
-    // MARK: - 기여자 (준혁님) OFF 상태 춤: 엉덩이 춤 Frame 1 (자지 않고 리듬 타며 엉덩이 씰룩 🎵)
-    private func drawContributorHipDanceFrame1(context: GraphicsContext, size: CGSize) {
-        let p: CGFloat = 2.0
-        let offsetX = (size.width - p * 16) / 2
+    // MARK: - 기여자 (준혁님) OFF 상태: 오른쪽 벽에서 고개 내밀고 빼꼼 쳐다보기 👀
+    private func drawContributorPeeking(context: GraphicsContext, size: CGSize) {
+        let p: CGFloat = 2.2
+        let offsetX = size.width - p * 28
         let offsetY = size.height - p * 20 - 2
 
         let cHair = Color(red: 0.15, green: 0.15, blue: 0.18)
         let cSkin = Color(red: 1.0, green: 0.86, blue: 0.76)
         let cGlasses = Color(red: 0.65, green: 0.65, blue: 0.70)
         let cEyes = Color(red: 0.1, green: 0.1, blue: 0.12)
-        let cMouth = Color(red: 0.85, green: 0.45, blue: 0.45)
         let cShirt = Color(red: 0.11, green: 0.12, blue: 0.14)
-        let cLogo = Color(red: 0.92, green: 0.15, blue: 0.22)
-        let cPants = Color(red: 0.16, green: 0.19, blue: 0.24)
-        let cShoes = Color(red: 0.96, green: 0.96, blue: 0.98)
-        let cNote = Color(red: 0.4, green: 0.7, blue: 1.0) // 쿨 블루 음표
 
+        // 머리 (우측 벽에서 튀어나온 헤어)
         var hairPixels: [(Int, Int)] = []
-        for x in 4...11 {
-            hairPixels.append((x, 0))
-            hairPixels.append((x, 1))
-            hairPixels.append((x, 2))
+        for y in 8...11 {
+            for x in 21...30 {
+                hairPixels.append((x, y))
+            }
         }
-        hairPixels.append(contentsOf: [(3, 1), (12, 1), (4, 3), (5, 3), (7, 3), (8, 3), (10, 3), (11, 3)])
+        hairPixels.append(contentsOf: [(20, 10), (20, 11), (21, 12), (22, 12), (24, 12), (25, 12)])
 
+        // 얼굴
         var facePixels: [(Int, Int)] = []
-        for x in 4...11 {
-            for y in 3...7 {
-                if !((x == 4 || x == 5 || x == 7 || x == 8 || x == 10 || x == 11) && y == 3) {
+        for y in 12...17 {
+            for x in 21...30 {
+                if !((y == 12 && (x == 21 || x == 22 || x == 24 || x == 25))) {
                     facePixels.append((x, y))
                 }
             }
         }
+        facePixels.append(contentsOf: [(20, 13), (20, 14)])
 
+        // 둥근 안경 & 왼쪽(스티브/농민)을 쳐다보는 호기심 가득한 눈 👀
         let glassesPixels: [(Int, Int)] = [
-            (5, 4), (6, 4), (7, 4), (8, 4), (9, 4),
-            (5, 5), (6, 5), (8, 5), (9, 5)
+            (22, 13), (23, 13), (24, 13), (25, 13),
+            (22, 14), (25, 14),
+            (22, 15), (23, 15), (24, 15), (25, 15)
         ]
-        let eyesPixels: [(Int, Int)] = [(5, 5), (6, 5), (8, 5), (9, 5)]
-        let mouthPixels: [(Int, Int)] = [(7, 7)]
+        let eyesPixels: [(Int, Int)] = [(23, 14), (24, 14)]
 
-        // 몸통 (허리에 손 올리고 엉덩이 좌측 씰룩)
+        // 벽 잡고 있는 귀여운 손 🖐️
+        let handPixels: [(Int, Int)] = [
+            (19, 15), (19, 16), (19, 17), (20, 16)
+        ]
+
+        // 블랙 폴로 상의 어깨/목 부분
         var shirtPixels: [(Int, Int)] = []
-        for x in 2...11 {
-            for y in 8...13 {
+        for y in 18...23 {
+            for x in 21...30 {
                 shirtPixels.append((x, y))
             }
         }
-        let logoPixels: [(Int, Int)] = [(5, 10)]
-
-        // 양손 허리에 올린 댄스 자세
-        let armPixels: [(Int, Int)] = [
-            (1, 8), (0, 9), (0, 10),
-            (12, 8), (13, 9), (13, 10)
-        ]
-        let handPixels: [(Int, Int)] = [(0, 11), (13, 11)]
-
-        // 하의 (좌측 엉덩이 스텝)
-        var pantsPixels: [(Int, Int)] = []
-        for y in 14...17 {
-            pantsPixels.append(contentsOf: [(2, y), (3, y), (4, y), (8, y), (9, y), (10, y)])
-        }
-        let shoePixels: [(Int, Int)] = [
-            (1, 18), (2, 18), (3, 18), (4, 18),
-            (8, 18), (9, 18), (10, 18), (11, 18)
-        ]
-        let notePixels: [(Int, Int)] = [(14, 0), (15, 0), (15, 1), (14, 2)]
 
         drawPixels(context: context, pixels: hairPixels, color: cHair, p: p, offsetX: offsetX, offsetY: offsetY)
         drawPixels(context: context, pixels: facePixels, color: cSkin, p: p, offsetX: offsetX, offsetY: offsetY)
         drawPixels(context: context, pixels: glassesPixels, color: cGlasses, p: p, offsetX: offsetX, offsetY: offsetY)
         drawPixels(context: context, pixels: eyesPixels, color: cEyes, p: p, offsetX: offsetX, offsetY: offsetY)
-        drawPixels(context: context, pixels: mouthPixels, color: cMouth, p: p, offsetX: offsetX, offsetY: offsetY)
-        drawPixels(context: context, pixels: shirtPixels, color: cShirt, p: p, offsetX: offsetX, offsetY: offsetY)
-        drawPixels(context: context, pixels: logoPixels, color: cLogo, p: p, offsetX: offsetX, offsetY: offsetY)
-        drawPixels(context: context, pixels: armPixels, color: cShirt, p: p, offsetX: offsetX, offsetY: offsetY)
         drawPixels(context: context, pixels: handPixels, color: cSkin, p: p, offsetX: offsetX, offsetY: offsetY)
-        drawPixels(context: context, pixels: pantsPixels, color: cPants, p: p, offsetX: offsetX, offsetY: offsetY)
-        drawPixels(context: context, pixels: shoePixels, color: cShoes, p: p, offsetX: offsetX, offsetY: offsetY)
-        drawPixels(context: context, pixels: notePixels, color: cNote, p: p, offsetX: offsetX, offsetY: offsetY)
-    }
-
-    // MARK: - 기여자 (준혁님) OFF 상태 춤: 엉덩이 춤 Frame 2 (자지 않고 리듬 타며 엉덩이 씰룩 🎵)
-    private func drawContributorHipDanceFrame2(context: GraphicsContext, size: CGSize) {
-        let p: CGFloat = 2.0
-        let offsetX = (size.width - p * 16) / 2
-        let offsetY = size.height - p * 20 - 2
-
-        let cHair = Color(red: 0.15, green: 0.15, blue: 0.18)
-        let cSkin = Color(red: 1.0, green: 0.86, blue: 0.76)
-        let cGlasses = Color(red: 0.65, green: 0.65, blue: 0.70)
-        let cEyes = Color(red: 0.1, green: 0.1, blue: 0.12)
-        let cMouth = Color(red: 0.85, green: 0.45, blue: 0.45)
-        let cShirt = Color(red: 0.11, green: 0.12, blue: 0.14)
-        let cLogo = Color(red: 0.92, green: 0.15, blue: 0.22)
-        let cPants = Color(red: 0.16, green: 0.19, blue: 0.24)
-        let cShoes = Color(red: 0.96, green: 0.96, blue: 0.98)
-        let cNote = Color(red: 0.4, green: 0.7, blue: 1.0)
-
-        var hairPixels: [(Int, Int)] = []
-        for x in 4...11 {
-            hairPixels.append((x, 0))
-            hairPixels.append((x, 1))
-            hairPixels.append((x, 2))
-        }
-        hairPixels.append(contentsOf: [(3, 1), (12, 1), (4, 3), (5, 3), (7, 3), (8, 3), (10, 3), (11, 3)])
-
-        var facePixels: [(Int, Int)] = []
-        for x in 4...11 {
-            for y in 3...7 {
-                if !((x == 4 || x == 5 || x == 7 || x == 8 || x == 10 || x == 11) && y == 3) {
-                    facePixels.append((x, y))
-                }
-            }
-        }
-
-        let glassesPixels: [(Int, Int)] = [
-            (5, 4), (6, 4), (7, 4), (8, 4), (9, 4),
-            (5, 5), (6, 5), (8, 5), (9, 5)
-        ]
-        let eyesPixels: [(Int, Int)] = [(5, 5), (6, 5), (8, 5), (9, 5)]
-        let mouthPixels: [(Int, Int)] = [(8, 7)]
-
-        // 몸통 (허리에 손 올리고 엉덩이 우측 씰룩)
-        var shirtPixels: [(Int, Int)] = []
-        for x in 4...13 {
-            for y in 8...13 {
-                shirtPixels.append((x, y))
-            }
-        }
-        let logoPixels: [(Int, Int)] = [(7, 10)]
-
-        let armPixels: [(Int, Int)] = [
-            (3, 8), (2, 9), (2, 10),
-            (14, 8), (15, 9), (15, 10)
-        ]
-        let handPixels: [(Int, Int)] = [(2, 11), (15, 11)]
-
-        // 하의 (우측 엉덩이 스텝)
-        var pantsPixels: [(Int, Int)] = []
-        for y in 14...17 {
-            pantsPixels.append(contentsOf: [(5, y), (6, y), (7, y), (11, y), (12, y), (13, y)])
-        }
-        let shoePixels: [(Int, Int)] = [
-            (4, 18), (5, 18), (6, 18), (7, 18),
-            (11, 18), (12, 18), (13, 18), (14, 18)
-        ]
-        let notePixels: [(Int, Int)] = [(-1, 0), (0, 0), (0, 1), (-1, 2)]
-
-        drawPixels(context: context, pixels: hairPixels, color: cHair, p: p, offsetX: offsetX, offsetY: offsetY)
-        drawPixels(context: context, pixels: facePixels, color: cSkin, p: p, offsetX: offsetX, offsetY: offsetY)
-        drawPixels(context: context, pixels: glassesPixels, color: cGlasses, p: p, offsetX: offsetX, offsetY: offsetY)
-        drawPixels(context: context, pixels: eyesPixels, color: cEyes, p: p, offsetX: offsetX, offsetY: offsetY)
-        drawPixels(context: context, pixels: mouthPixels, color: cMouth, p: p, offsetX: offsetX, offsetY: offsetY)
         drawPixels(context: context, pixels: shirtPixels, color: cShirt, p: p, offsetX: offsetX, offsetY: offsetY)
-        drawPixels(context: context, pixels: logoPixels, color: cLogo, p: p, offsetX: offsetX, offsetY: offsetY)
-        drawPixels(context: context, pixels: armPixels, color: cShirt, p: p, offsetX: offsetX, offsetY: offsetY)
-        drawPixels(context: context, pixels: handPixels, color: cSkin, p: p, offsetX: offsetX, offsetY: offsetY)
-        drawPixels(context: context, pixels: pantsPixels, color: cPants, p: p, offsetX: offsetX, offsetY: offsetY)
-        drawPixels(context: context, pixels: shoePixels, color: cShoes, p: p, offsetX: offsetX, offsetY: offsetY)
-        drawPixels(context: context, pixels: notePixels, color: cNote, p: p, offsetX: offsetX, offsetY: offsetY)
     }
 
     // MARK: - 기여자 (준혁님) ON 상태 춤: 하늘 찌르기 디스코 Frame 1 ☝️🕺
