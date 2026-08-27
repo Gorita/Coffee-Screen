@@ -762,6 +762,7 @@ struct AwakeCharacterView: View {
                     .frame(width: 90, height: 70)
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.horizontal, 16)
 
                 // 2. 돌맹이 (던지기 애니메이션 - 스티브 손에서 농민 머리로의 완벽한 원래 궤적)
                 if isAwake && projectileVisible {
@@ -771,7 +772,7 @@ struct AwakeCharacterView: View {
                         .offset(x: projectileOffsetX - 60, y: projectileOffsetY - 5)
                 }
 
-                // 3. 기여자 캐릭터 (우측 창 끝단에 완전히 독립 정렬)
+                // 3. 기여자 캐릭터 (우측 창 끝단 벽에 0px 완벽 밀착)
                 HStack {
                     Spacer()
                     Canvas { context, size in
@@ -789,7 +790,6 @@ struct AwakeCharacterView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .bottom)
-            .padding(.horizontal, 12)
             .padding(.top, 40)
 
             // 커피잔 토글 버튼 (좌측 상단)
@@ -1447,60 +1447,69 @@ struct AwakeCharacterView: View {
         drawPixels(context: context, pixels: shoePixels, color: shoeColor, p: p, offsetX: offsetX, offsetY: offsetY)
     }
 
-    // MARK: - 기여자 (준혁님) OFF 상태: 오른쪽 창 테두리 뒤에서 고개 내밀고 빼꼼 쳐다보기 👀
+    // MARK: - 기여자 (준혁님) OFF 상태: 오른쪽 창 테두리 뒤에서 45도 고개 내밀고 빼꼼 쳐다보기 (양쪽 눈 & 미니 안경) 👀
     private func drawContributorPeeking(context: GraphicsContext, size: CGSize) {
-        let p: CGFloat = 2.4
-        // 오른쪽 벽(size.width) 바로 뒤에서 고개를 내밀도록 오프셋 설정
-        let offsetX = size.width - p * 10
-        let offsetY = size.height - p * 23 - 2
+        let p: CGFloat = 2.0 // 춤추는 캐릭터와 100% 동일한 픽셀 크기
+        // 오른쪽 벽(size.width)에 24픽셀 너비가 정확히 밀착되도록 오프셋 설정
+        let offsetX = size.width - p * 24
+        let offsetY = size.height - p * 22 - 2
 
         let cHair = Color(red: 0.15, green: 0.15, blue: 0.18)
         let cSkin = Color(red: 1.0, green: 0.86, blue: 0.76)
-        let cGlasses = Color(red: 0.70, green: 0.70, blue: 0.75)
+        let cGlasses = Color(red: 0.65, green: 0.65, blue: 0.70)
         let cEyes = Color(red: 0.1, green: 0.1, blue: 0.12)
         let cShirt = Color(red: 0.11, green: 0.12, blue: 0.14)
-        let cLogo = Color(red: 0.92, green: 0.15, blue: 0.22)
 
-        // 1. 머리카락 (댄디 바가지 스타일)
+        // 1. 45도 기울어진 바가지 댄디 헤어
         var hairPixels: [(Int, Int)] = []
-        for x in 0...9 {
-            hairPixels.append((x, 0))
-            hairPixels.append((x, 1))
-            hairPixels.append((x, 2))
+        for x in 15...21 {
+            hairPixels.append((x, 8))
+            hairPixels.append((x, 9))
         }
-        hairPixels.append(contentsOf: [(-1, 1), (-1, 2), (0, 3), (1, 3), (3, 3), (4, 3), (6, 3), (7, 3)])
+        for x in 13...22 { hairPixels.append((x, 10)) }
+        for x in 12...22 { hairPixels.append((x, 11)) }
+        hairPixels.append(contentsOf: [
+            (11, 12), (12, 12), (14, 12), (15, 12),
+            (17, 12), (18, 12), (20, 12), (21, 12)
+        ])
 
-        // 2. 얼굴 (벽에서 쏙 나온 얼굴)
+        // 2. 얼굴 (45도 틸트 피부)
         var facePixels: [(Int, Int)] = []
-        for x in 0...9 {
-            for y in 3...7 {
-                if !((x == 0 || x == 1 || x == 3 || x == 4 || x == 6 || x == 7) && y == 3) {
+        for y in 12...17 {
+            for x in 12...22 {
+                if !(y == 12 && [11, 12, 14, 15, 17, 18, 20, 21].contains(x)) {
                     facePixels.append((x, y))
                 }
             }
         }
 
-        // 3. 둥근 안경 테 & 스티브/농민을 바라보는 또렷한 눈 👀
+        // 3. 둥근 안경 & 양쪽 눈 👀 (왼쪽 눈 + 오른쪽 눈 모두 선명)
         let glassesPixels: [(Int, Int)] = [
-            (1, 4), (2, 4), (3, 4), (4, 4), (5, 4),
-            (1, 5), (2, 5), (4, 5), (5, 5),
-            (1, 6), (2, 6), (3, 6), (4, 6), (5, 6)
+            (13, 14), (14, 14), (15, 14),
+            (13, 15), (15, 15),
+            (13, 16), (14, 16), (15, 16),
+            (16, 14), // 안경 브릿지
+            (17, 14), (18, 14), (19, 14),
+            (17, 15), (19, 15),
+            (17, 16), (18, 16), (19, 16)
         ]
-        let eyesPixels: [(Int, Int)] = [(2, 5), (3, 5)] // 왼쪽을 또렷하게 쳐다봄
+        let eyesPixels: [(Int, Int)] = [
+            (14, 15), // 좌측 눈동자
+            (18, 15)  // 우측 눈동자
+        ]
 
-        // 4. 벽 모서리를 잡고 있는 앙증맞은 손 🖐️
+        // 4. 벽 잡고 있는 귀여운 손 🖐️
         let handPixels: [(Int, Int)] = [
-            (-2, 7), (-2, 8), (-1, 7), (-1, 8), (0, 8)
+            (10, 18), (11, 18), (10, 19), (11, 19), (12, 19)
         ]
 
-        // 5. 블랙 폴로 상의 어깨 라인 & 레드 로고
+        // 5. 벽 뒤로 가려진 블랙 폴로 상의 어깨
         var shirtPixels: [(Int, Int)] = []
-        for x in 0...9 {
-            for y in 8...15 {
+        for y in 18...22 {
+            for x in 13...23 {
                 shirtPixels.append((x, y))
             }
         }
-        let logoPixels: [(Int, Int)] = [(3, 10)]
 
         drawPixels(context: context, pixels: hairPixels, color: cHair, p: p, offsetX: offsetX, offsetY: offsetY)
         drawPixels(context: context, pixels: facePixels, color: cSkin, p: p, offsetX: offsetX, offsetY: offsetY)
@@ -1508,7 +1517,6 @@ struct AwakeCharacterView: View {
         drawPixels(context: context, pixels: eyesPixels, color: cEyes, p: p, offsetX: offsetX, offsetY: offsetY)
         drawPixels(context: context, pixels: handPixels, color: cSkin, p: p, offsetX: offsetX, offsetY: offsetY)
         drawPixels(context: context, pixels: shirtPixels, color: cShirt, p: p, offsetX: offsetX, offsetY: offsetY)
-        drawPixels(context: context, pixels: logoPixels, color: cLogo, p: p, offsetX: offsetX, offsetY: offsetY)
     }
 
     // MARK: - 기여자 (준혁님) ON 상태 춤: 하늘 찌르기 디스코 Frame 1 ☝️🕺
