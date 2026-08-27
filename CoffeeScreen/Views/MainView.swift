@@ -1447,12 +1447,12 @@ struct AwakeCharacterView: View {
         drawPixels(context: context, pixels: shoePixels, color: shoeColor, p: p, offsetX: offsetX, offsetY: offsetY)
     }
 
-    // MARK: - 기여자 (준혁님) OFF 상태: 오른쪽 창 테두리 뒤에서 45도 고개 내밀고 빼꼼 쳐다보기 (양쪽 눈 & 미니 안경) 👀
+    // MARK: - 기여자 (준혁님) OFF 상태: 오른쪽 창 테두리 뒤에서 고개 내밀고 빼꼼 쳐다보기 (춤추는 캐릭터와 100% 동일한 머리/눈 크기) 👀
     private func drawContributorPeeking(context: GraphicsContext, size: CGSize) {
         let p: CGFloat = 2.0 // 춤추는 캐릭터와 100% 동일한 픽셀 크기
-        // 오른쪽 벽(size.width)에 24픽셀 너비가 정확히 밀착되도록 오프셋 설정
-        let offsetX = size.width - p * 24
-        let offsetY = size.height - p * 22 - 2
+        // 오른쪽 벽(size.width)에 머리와 어깨가 밀착되도록 오프셋 설정
+        let offsetX = size.width - p * 12
+        let offsetY = size.height - p * 20 - 2
 
         let cHair = Color(red: 0.15, green: 0.15, blue: 0.18)
         let cSkin = Color(red: 1.0, green: 0.86, blue: 0.76)
@@ -1460,53 +1460,46 @@ struct AwakeCharacterView: View {
         let cEyes = Color(red: 0.1, green: 0.1, blue: 0.12)
         let cShirt = Color(red: 0.11, green: 0.12, blue: 0.14)
 
-        // 1. 45도 기울어진 바가지 댄디 헤어
+        // 1. 머리 (춤추는 캐릭터와 100% 동일한 8px 너비 헤어)
         var hairPixels: [(Int, Int)] = []
-        for x in 15...21 {
-            hairPixels.append((x, 8))
-            hairPixels.append((x, 9))
+        for x in 5...11 {
+            hairPixels.append((x, 0))
+            hairPixels.append((x, 1))
+            hairPixels.append((x, 2))
         }
-        for x in 13...22 { hairPixels.append((x, 10)) }
-        for x in 12...22 { hairPixels.append((x, 11)) }
-        hairPixels.append(contentsOf: [
-            (11, 12), (12, 12), (14, 12), (15, 12),
-            (17, 12), (18, 12), (20, 12), (21, 12)
-        ])
+        hairPixels.append(contentsOf: [(4, 1), (4, 2)])
+        // 앞머리 (바가지/댄디 스타일)
+        hairPixels.append(contentsOf: [(5, 3), (6, 3), (8, 3), (9, 3), (11, 3)])
 
-        // 2. 얼굴 (45도 틸트 피부)
+        // 2. 얼굴
         var facePixels: [(Int, Int)] = []
-        for y in 12...17 {
-            for x in 12...22 {
-                if !(y == 12 && [11, 12, 14, 15, 17, 18, 20, 21].contains(x)) {
+        for y in 3...7 {
+            for x in 4...11 {
+                if !(y == 3 && [5, 6, 8, 9, 11].contains(x)) {
                     facePixels.append((x, y))
                 }
             }
         }
 
-        // 3. 둥근 안경 & 양쪽 눈 👀 (왼쪽 눈 + 오른쪽 눈 모두 선명)
+        // 3. 춤추는 캐릭터와 100% 동일한 안경 & 도트 눈 👀 (왼쪽을 쳐다봄)
         let glassesPixels: [(Int, Int)] = [
-            (13, 14), (14, 14), (15, 14),
-            (13, 15), (15, 15),
-            (13, 16), (14, 16), (15, 16),
-            (16, 14), // 안경 브릿지
-            (17, 14), (18, 14), (19, 14),
-            (17, 15), (19, 15),
-            (17, 16), (18, 16), (19, 16)
+            (5, 4), (6, 4), (7, 4), (8, 4), (9, 4),
+            (5, 5), (6, 5), (8, 5), (9, 5)
         ]
         let eyesPixels: [(Int, Int)] = [
-            (14, 15), // 좌측 눈동자
-            (18, 15)  // 우측 눈동자
+            (5, 5), // 좌측 눈동자
+            (8, 5)  // 우측 눈동자
         ]
 
-        // 4. 벽 잡고 있는 귀여운 손 🖐️
+        // 4. 벽 잡고 있는 앙증맞은 손 🖐️
         let handPixels: [(Int, Int)] = [
-            (10, 18), (11, 18), (10, 19), (11, 19), (12, 19)
+            (2, 8), (3, 8), (2, 9), (3, 9)
         ]
 
         // 5. 벽 뒤로 가려진 블랙 폴로 상의 어깨
         var shirtPixels: [(Int, Int)] = []
-        for y in 18...22 {
-            for x in 13...23 {
+        for y in 8...13 {
+            for x in 4...11 {
                 shirtPixels.append((x, y))
             }
         }
