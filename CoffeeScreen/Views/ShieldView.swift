@@ -31,7 +31,12 @@ struct ShieldView: View {
                 // 4. 커스텀 시계 & 메세지 위젯 레이어 (최상단 Z-Index 배치로 절대 가려지지 않음)
                 widgetsLayer
 
-                // 5. 알림판 레이어 (최상단)
+                // 5. 제휴 쉐어링크 큐레이션 글래스 바 (하단 중앙)
+                if isMainScreen {
+                    adGlassBarLayer
+                }
+
+                // 6. 알림판 레이어 (최상단)
                 bulletinBoardLayer
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
@@ -43,6 +48,17 @@ struct ShieldView: View {
         .onReceive(timer) { input in
             currentTime = input
         }
+    }
+
+    // MARK: - 제휴 쉐어링크 글래스 바 레이어
+
+    private var adGlassBarLayer: some View {
+        VStack {
+            Spacer()
+            ShieldAdGlassBarView()
+                .padding(.bottom, 24)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
     }
 
     // MARK: - Background Subviews
