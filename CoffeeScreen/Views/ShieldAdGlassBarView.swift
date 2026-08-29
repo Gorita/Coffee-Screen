@@ -66,7 +66,9 @@ struct ShieldAdGlassBarView: View {
                     RoundedRectangle(cornerRadius: 22, style: .continuous)
                         .fill(.ultraThinMaterial)
                     RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(Color.black.opacity(0.25)) // 투명한 다크 글래스 틴트
+                        .fill(Color.white.opacity(0.04)) // 맑은 크리스탈 광택
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(Color.black.opacity(0.10)) // 10% 미세 다크 틴트 (배경 90% 투과)
                 }
             )
             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
@@ -75,9 +77,9 @@ struct ShieldAdGlassBarView: View {
                     .strokeBorder(
                         LinearGradient(
                             colors: [
-                                Color.white.opacity(0.35),
-                                Color.white.opacity(0.12),
-                                Color.white.opacity(0.04)
+                                Color.white.opacity(0.45),
+                                Color.white.opacity(0.15),
+                                Color.white.opacity(0.05)
                             ],
                             startPoint: .top,
                             endPoint: .bottom
@@ -85,7 +87,7 @@ struct ShieldAdGlassBarView: View {
                         lineWidth: 1
                     )
             )
-            .shadow(color: .black.opacity(0.4), radius: 24, x: 0, y: 12)
+            .shadow(color: .black.opacity(0.25), radius: 20, x: 0, y: 8)
 
             // 2. 절제된 미니멀 공정위 문구 (화면 최하단 은은한 텍스트)
             if let disclosure = item.disclosure {
