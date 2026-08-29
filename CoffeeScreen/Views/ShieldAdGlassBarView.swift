@@ -13,26 +13,26 @@ struct ShieldAdGlassBarView: View {
 
         VStack(spacing: 8) {
             // 1. 메인 리퀴드 글래스모피즘 바 (Apple 공식 표준 Material API)
-            HStack(spacing: 14) {
-                // 상품 썸네일 (52x52 둥근 사각형)
+            HStack(spacing: 16) {
+                // 상품 썸네일 (60x60 둥근 사각형)
                 thumbnailView(for: item)
-                    .frame(width: 52, height: 52)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .frame(width: 60, height: 60)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
                             .strokeBorder(Color.white.opacity(0.18), lineWidth: 0.5)
                     )
                     .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
 
                 // 텍스트 정보 영역 (Apple HIG Semantic Vibrancy 계층 적용)
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text(item.tagline)
                         .font(.system(size: 10, weight: .bold))
                         .foregroundStyle(Color(red: 0.95, green: 0.72, blue: 0.30)) // 시스템 앰버/골드 틴트
                         .tracking(0.5)
 
                     Text(item.title)
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(.primary) // 배경에 따라 자동 최적화되는 Apple Primary Vibrancy
                         .lineLimit(1)
 
@@ -41,30 +41,30 @@ struct ShieldAdGlassBarView: View {
                         .foregroundStyle(.secondary) // Apple Secondary Vibrancy
                         .lineLimit(1)
                 }
-                .frame(maxWidth: 320, alignment: .leading)
+                .frame(maxWidth: 330, alignment: .leading)
 
                 Spacer(minLength: 0)
 
-                // QR코드 영역 (토스 앱 직결 AppsFlyer 딥링크 QR 생성)
-                if let qrImage = adManager.generateQRCode(from: item.targetQRString, size: 104) {
+                // QR코드 영역 (시원하게 확대된 68x68 고선명 굵은 도트 QR)
+                if let qrImage = adManager.generateQRCode(from: item.targetQRString, size: 256) {
                     Image(nsImage: qrImage)
                         .interpolation(.none)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .padding(4)
+                        .padding(5)
                         .background(Color.white)
-                        .frame(width: 52, height: 52)
-                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                        .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
+                        .frame(width: 68, height: 68)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 3)
                 }
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, 16)
             .padding(.vertical, 10)
-            .frame(width: 520, height: 72)
+            .frame(width: 550, height: 86)
             // 🌟 Apple 공식 권장: Metal 가속 Material + Shape 직접 바인딩
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .strokeBorder(
                         LinearGradient(
                             colors: [
@@ -78,7 +78,7 @@ struct ShieldAdGlassBarView: View {
                         lineWidth: 0.5 // Apple 표준 0.5pt 헤어라인
                     )
             )
-            .shadow(color: .black.opacity(0.20), radius: 20, x: 0, y: 8)
+            .shadow(color: .black.opacity(0.20), radius: 22, x: 0, y: 8)
 
             // 2. 절제된 미니멀 공정위 문구 (Apple Tertiary Vibrancy 적용)
             if let disclosure = item.disclosure {
