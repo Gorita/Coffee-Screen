@@ -19,7 +19,20 @@ final class AffiliateAdManager: ObservableObject {
     // 원격 ads.json CDN 주소
     private let remoteFeedURL = URL(string: "https://raw.githubusercontent.com/Gorita/Coffee-Screen/main/ads.json")
 
+    // 기본 추천 아이템 (네트워크/번들 로딩 전 항상 즉시 표시)
+    static let defaultItem = AffiliateAdItem(
+        id: "toss-tea-01",
+        tagline: "☕ TEA SELECTION",
+        title: "몽베스트 블랜딩 티 (녹차&홍차 40개입)",
+        subtitle: "작업 중 산뜻한 티타임 • 모바일 카메라로 스캔",
+        shareUrl: "https://toss.im/_m/h6KNKtZf",
+        imageUrl: "https://shopping.toss.im/live/product/302023/96dc4e09-3728-429d-b554-a89c5e77f79f.jpg",
+        disclosure: "✱ 토스쇼핑 쉐어링크 파트너스 활동의 일환으로 수수료를 제공받을 수 있습니다."
+    )
+
     private init() {
+        self.currentAd = Self.defaultItem
+        self.feedItems = [Self.defaultItem]
         loadInitialFeed()
         fetchRemoteFeed()
     }
@@ -41,7 +54,7 @@ final class AffiliateAdManager: ObservableObject {
         guard let url = remoteFeedURL else { return }
 
         var request = URLRequest(url: url)
-        request.cachePolicy = .reloadIgnoringLocalCacheData
+        request.cachePolicy = NSURLRequest.CachePolicy.reloadIgnoringLocalCacheData
         request.timeoutInterval = 10
 
         URLSession.shared.dataTask(with: request) { [weak self] data, _, error in

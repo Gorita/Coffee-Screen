@@ -111,7 +111,7 @@ struct ShieldAdGlassBarView: View {
         }
     }
 
-    // MARK: - 10초 딜레이 스르륵(Slide-up) 스케줄링
+    // MARK: - 1초 딜레이 스르륵(Slide-up) 스케줄링
 
     private func scheduleAppearance() {
         cancelAppearance()
@@ -121,7 +121,7 @@ struct ShieldAdGlassBarView: View {
             }
         }
         delayWorkItem = item
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10.0, execute: item)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: item)
     }
 
     private func cancelAppearance() {
