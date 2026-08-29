@@ -45,8 +45,8 @@ struct ShieldAdGlassBarView: View {
 
                 Spacer(minLength: 0)
 
-                // QR코드 영역 (글래스 인셋 스타일)
-                if let qrImage = adManager.generateQRCode(from: item.shareUrl, size: 104) {
+                // QR코드 영역 (토스 앱 직결 AppsFlyer 딥링크 QR 생성)
+                if let qrImage = adManager.generateQRCode(from: item.targetQRString, size: 104) {
                     Image(nsImage: qrImage)
                         .interpolation(.none)
                         .resizable()

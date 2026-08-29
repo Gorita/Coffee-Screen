@@ -14,8 +14,14 @@ struct AffiliateAdItem: Identifiable, Codable, Equatable {
     let title: String
     let subtitle: String
     let shareUrl: String
+    let qrUrl: String?
     let imageUrl: String
     let disclosure: String?
+
+    /// QR코드 생성에 사용할 대상 URL 문자열 (토스 앱 직결 AppsFlyer 딥링크 우선 사용)
+    var targetQRString: String {
+        qrUrl ?? shareUrl
+    }
 
     var validShareURL: URL? {
         URL(string: shareUrl)

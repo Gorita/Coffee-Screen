@@ -26,6 +26,7 @@ final class AffiliateAdManager: ObservableObject {
         title: "몽베스트 블랜딩 티 (녹차&홍차 40개입)",
         subtitle: "작업 중 산뜻한 티타임 • 모바일 카메라로 스캔",
         shareUrl: "https://toss.im/_m/h6KNKtZf",
+        qrUrl: "https://app.appsflyer.com/id839333328?pid=toss_shopping_web&c=toss_shopping_web_qr&af_dp=supertoss%3A//tosspay/shopping/product%3Fid%3D10046715%26referrer%3Daffiliate%26k%3Db448cd31-1625-4101-ba1d-f85dd9509d0e&deep_link_value=supertoss%3A//tosspay/shopping/product%3Fid%3D10046715%26referrer%3Daffiliate%26k%3Db448cd31-1625-4101-ba1d-f85dd9509d0e&af_force_deeplink=true",
         imageUrl: "https://shopping.toss.im/live/product/302023/96dc4e09-3728-429d-b554-a89c5e77f79f.jpg",
         disclosure: "✱ 토스쇼핑 쉐어링크 파트너스 활동의 일환으로 수수료를 제공받을 수 있습니다."
     )
