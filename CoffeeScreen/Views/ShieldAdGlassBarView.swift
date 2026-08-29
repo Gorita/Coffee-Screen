@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// macOS Now-Playing 스타일 Liquid Glassmorphism 잠금화면 쉐어링크 뷰
+/// Apple Human Interface Guidelines (HIG) 공식 권장 표준 Liquid Glassmorphism 잠금화면 쉐어링크 뷰
 struct ShieldAdGlassBarView: View {
     @ObservedObject var adManager = AffiliateAdManager.shared
 
@@ -12,7 +12,7 @@ struct ShieldAdGlassBarView: View {
         let item = adManager.currentAd ?? AffiliateAdManager.defaultItem
 
         VStack(spacing: 8) {
-            // 1. 메인 리퀴드 글래스모피즘 바
+            // 1. 메인 리퀴드 글래스모피즘 바 (Apple 공식 표준 Material API)
             HStack(spacing: 14) {
                 // 상품 썸네일 (52x52 둥근 사각형)
                 thumbnailView(for: item)
@@ -20,25 +20,25 @@ struct ShieldAdGlassBarView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
+                            .strokeBorder(Color.white.opacity(0.18), lineWidth: 0.5)
                     )
-                    .shadow(color: .black.opacity(0.25), radius: 4, x: 0, y: 2)
+                    .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
 
-                // 텍스트 정보 영역
+                // 텍스트 정보 영역 (Apple HIG Semantic Vibrancy 계층 적용)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.tagline)
                         .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(Color(red: 0.92, green: 0.70, blue: 0.28)) // 웜 골드
+                        .foregroundStyle(Color(red: 0.95, green: 0.72, blue: 0.30)) // 시스템 앰버/골드 틴트
                         .tracking(0.5)
 
                     Text(item.title)
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.primary) // 배경에 따라 자동 최적화되는 Apple Primary Vibrancy
                         .lineLimit(1)
 
                     Text(item.subtitle)
                         .font(.system(size: 11))
-                        .foregroundStyle(.white.opacity(0.65))
+                        .foregroundStyle(.secondary) // Apple Secondary Vibrancy
                         .lineLimit(1)
                 }
                 .frame(maxWidth: 320, alignment: .leading)
@@ -55,45 +55,36 @@ struct ShieldAdGlassBarView: View {
                         .background(Color.white)
                         .frame(width: 52, height: 52)
                         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                        .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
                 }
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
             .frame(width: 520, height: 72)
-            .background(
-                ZStack {
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(.ultraThinMaterial)
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(Color.white.opacity(0.04)) // 맑은 크리스탈 광택
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(Color.black.opacity(0.10)) // 10% 미세 다크 틴트 (배경 90% 투과)
-                }
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            // 🌟 Apple 공식 권장: Metal 가속 Material + Shape 직접 바인딩
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
                     .strokeBorder(
                         LinearGradient(
                             colors: [
-                                Color.white.opacity(0.45),
-                                Color.white.opacity(0.15),
-                                Color.white.opacity(0.05)
+                                Color.white.opacity(0.40),
+                                Color.white.opacity(0.12),
+                                Color.white.opacity(0.04)
                             ],
                             startPoint: .top,
                             endPoint: .bottom
                         ),
-                        lineWidth: 1
+                        lineWidth: 0.5 // Apple 표준 0.5pt 헤어라인
                     )
             )
-            .shadow(color: .black.opacity(0.25), radius: 20, x: 0, y: 8)
+            .shadow(color: .black.opacity(0.20), radius: 20, x: 0, y: 8)
 
-            // 2. 절제된 미니멀 공정위 문구 (화면 최하단 은은한 텍스트)
+            // 2. 절제된 미니멀 공정위 문구 (Apple Tertiary Vibrancy 적용)
             if let disclosure = item.disclosure {
                 Text(disclosure)
                     .font(.system(size: 9))
-                    .foregroundStyle(.white.opacity(0.35))
+                    .foregroundStyle(.tertiary)
                     .tracking(-0.2)
             }
         }
