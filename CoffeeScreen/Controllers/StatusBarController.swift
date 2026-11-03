@@ -24,6 +24,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     /// Awake 토글 콜백
     var onAwakeToggle: ((Bool) -> Void)?
 
+    /// 화면 꺼짐 전 자동 잠금 토글 콜백
+    var onAutoLockBeforeSleepToggle: ((Bool) -> Void)?
+
     /// 업데이트 확인 콜백
     var onCheckForUpdates: (() -> Void)?
 
@@ -35,6 +38,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     /// Awake 상태
     private var isAwake: Bool = false
+
+    /// 화면 꺼짐 전 자동 잠금 상태
+    private var isAutoLockBeforeSleepEnabled: Bool = true
 
     /// 아이콘이 회전된 상태인지
     private var isRotated: Bool = false
@@ -58,10 +64,11 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     // MARK: - Public Methods
 
     /// 상태 업데이트
-    func updateStatus(isLocked: Bool, isPINSet: Bool, isAwake: Bool = false) {
+    func updateStatus(isLocked: Bool, isPINSet: Bool, isAwake: Bool = false, isAutoLockBeforeSleepEnabled: Bool = true) {
         self.isLocked = isLocked
         self.isPINSet = isPINSet
         self.isAwake = isAwake
+        self.isAutoLockBeforeSleepEnabled = isAutoLockBeforeSleepEnabled
         updateMenu()
     }
 
@@ -296,6 +303,17 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             )
             awakeItem.target = self
             menu.addItem(awakeItem)
+
+            // 화면 꺼짐 전 자동 잠금 메뉴
+            let autoLockTitle = String(localized: "menu.autoLockBeforeSleep", defaultValue: "화면 꺼짐 전 자동 잠금")
+            let autoLockItem = NSMenuItem(
+                title: autoLockTitle,
+                action: #selector(toggleAutoLockBeforeSleep),
+                keyEquivalent: ""
+            )
+            autoLockItem.state = isAutoLockBeforeSleepEnabled ? .on : .off
+            autoLockItem.target = self
+            menu.addItem(autoLockItem)
         }
 
         menu.addItem(NSMenuItem.separator())
@@ -450,6 +468,13 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         let newState = !isAwake
         isAwake = newState
         onAwakeToggle?(newState)
+    }
+
+    @objc private func toggleAutoLockBeforeSleep() {
+        let newState = !isAutoLockBeforeSleepEnabled
+        isAutoLockBeforeSleepEnabled = newState
+        onAutoLockBeforeSleepToggle?(newState)
+        updateMenu()
     }
 
     @objc private func quitApp() {

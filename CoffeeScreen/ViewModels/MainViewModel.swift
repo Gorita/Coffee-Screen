@@ -18,6 +18,7 @@ final class MainViewModel: ObservableObject {
     private let lockHotkeyHandler = LockHotkeyHandler()
     private let statusBarController = StatusBarController()
     private let pinManager = PINManager.shared
+    private let sleepAutoLockController = SleepAutoLockController()
     private let updaterController = SPUStandardUpdaterController(
         startingUpdater: true,
         updaterDelegate: nil,
@@ -40,6 +41,7 @@ final class MainViewModel: ObservableObject {
         setupPowerControllerObservation()
         setupEmergencyEscape()
         setupLockHotkey()
+        setupSleepAutoLock()
         setupStatusBar()
         observePINChanges()
     }
@@ -95,6 +97,7 @@ final class MainViewModel: ObservableObject {
 
         appState.isLocked = true
         appState.connectedScreens = shieldWindowController.shieldCount
+        sleepAutoLockController.isLocked = true
 
         // 상태바 업데이트
         updateStatusBar()
@@ -119,6 +122,7 @@ final class MainViewModel: ObservableObject {
         appState.isAwake = false
         appState.lastError = nil
         shieldViewModel.resetAll()
+        sleepAutoLockController.isLocked = false
 
         // 상태바 업데이트
         updateStatusBar()
@@ -201,6 +205,15 @@ final class MainViewModel: ObservableObject {
         lockHotkeyHandler.start()
     }
 
+    var isAutoLockBeforeSleepEnabled: Bool {
+        get { sleepAutoLockController.isEnabled }
+        set {
+            sleepAutoLockController.isEnabled = newValue
+            objectWillChange.send()
+            updateStatusBar()
+        }
+    }
+
     /// 상태바 컨트롤러 설정
     private func setupStatusBar() {
         statusBarController.onLockToggle = { [weak self] in
@@ -231,6 +244,10 @@ final class MainViewModel: ObservableObject {
             }
         }
 
+        statusBarController.onAutoLockBeforeSleepToggle = { [weak self] enabled in
+            self?.isAutoLockBeforeSleepEnabled = enabled
+        }
+
         statusBarController.onCheckForUpdates = { [weak self] in
             self?.updaterController.checkForUpdates(nil)
         }
@@ -239,8 +256,24 @@ final class MainViewModel: ObservableObject {
         updateStatusBar()
     }
 
+    /// 화면 꺼짐 직전 자동 잠금 컨트롤러 설정
+    private func setupSleepAutoLock() {
+        sleepAutoLockController.onTriggerLock = { [weak self] in
+            guard let self = self else { return }
+            // 잠겨있지 않고 PIN이 설정되어 있는 경우 자동 잠금 실행
+            if !self.appState.isLocked && self.isPINSet {
+                self.startLock()
+            }
+        }
+    }
+
     /// 상태바 업데이트
     private func updateStatusBar() {
-        statusBarController.updateStatus(isLocked: appState.isLocked, isPINSet: isPINSet, isAwake: isStandaloneAwake)
+        statusBarController.updateStatus(
+            isLocked: appState.isLocked,
+            isPINSet: isPINSet,
+            isAwake: isStandaloneAwake,
+            isAutoLockBeforeSleepEnabled: isAutoLockBeforeSleepEnabled
+        )
     }
 }
