@@ -23,13 +23,15 @@ struct ShieldView: View {
                 // 2. 추가 스티커 레이어
                 stickersLayer
 
-                // 3. 잠금 해제 UI (메인 스크린에만 유저 설정에 따른 위치/스타일로 오버레이 렌더링)
-                if isMainScreen {
+                // 3. 잠금 해제 UI (네이티브 OS 락스크린이 아닐 때만 메인 스크린에 오버레이 렌더링)
+                if isMainScreen && !isNativeOSLockScreen {
                     unlockWindowOverlay
                 }
 
-                // 4. 커스텀 시계 & 메세지 위젯 레이어 (최상단 Z-Index 배치로 절대 가려지지 않음)
-                widgetsLayer
+                // 4. 커스텀 시계 & 메세지 위젯 레이어 (네이티브 OS 락스크린이 아닐 때만)
+                if !isNativeOSLockScreen {
+                    widgetsLayer
+                }
 
                 // 5. 제휴 쉐어링크 큐레이션 글래스 바 (하단 중앙)
                 if isMainScreen {
@@ -63,12 +65,20 @@ struct ShieldView: View {
 
     // MARK: - Background Subviews
 
+    private var isNativeOSLockScreen: Bool {
+        settingsManager.layout.backgroundType == .macosSequoia || settingsManager.layout.backgroundType == .windows11
+    }
+
     @ViewBuilder
     private func backgroundLayer(size: CGSize) -> some View {
         let layout = settingsManager.layout
         switch layout.backgroundType {
         case .solidColor:
             layout.backgroundColor
+        case .macosSequoia:
+            NativeMacOSLockScreenView(viewModel: viewModel)
+        case .windows11:
+            NativeWindows11LockScreenView(viewModel: viewModel)
         case .customImage:
             if let bgPath = layout.backgroundImagePath {
                 let isGIF = bgPath.lowercased().hasSuffix(".gif")

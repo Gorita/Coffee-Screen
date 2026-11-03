@@ -5,6 +5,8 @@ import SwiftUI
 enum BackgroundType: String, Codable, CaseIterable, Identifiable {
     case solidColor
     case customImage
+    case macosSequoia
+    case windows11
 
     var id: String { rawValue }
 
@@ -14,6 +16,10 @@ enum BackgroundType: String, Codable, CaseIterable, Identifiable {
             return String(localized: "Background.SolidColor", defaultValue: "Solid Color")
         case .customImage:
             return String(localized: "Background.CustomImage", defaultValue: "Custom Image")
+        case .macosSequoia:
+            return "macOS Sequoia"
+        case .windows11:
+            return "Windows 11"
         }
     }
 }

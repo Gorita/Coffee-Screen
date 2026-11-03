@@ -165,15 +165,17 @@ struct LiveShieldPreviewView: View {
                 stickersLayer
                     .zIndex(100)
 
-                // 3. 중앙 잠금 해제 UI 실물 오버레이 (드래그 이벤트를 차단하지 않음)
-                unlockWindowOverlay
-                    .allowsHitTesting(false)
-                    .zIndex(10)
+                // 3. 중앙 잠금 해제 UI 실물 오버레이 (네이티브 OS 락스크린이 아닐 때만)
+                if !isNativeOSLockScreen {
+                    unlockWindowOverlay
+                        .allowsHitTesting(false)
+                        .zIndex(10)
 
-                // 4. 커스텀 시계 & 메세지 위젯 레이어
-                widgetsLayer
-                    .allowsHitTesting(false)
-                    .zIndex(20)
+                    // 4. 커스텀 시계 & 메세지 위젯 레이어
+                    widgetsLayer
+                        .allowsHitTesting(false)
+                        .zIndex(20)
+                }
 
                 // 5. 알림판 레이어 (최상단)
                 bulletinBoardPreviewLayer
@@ -189,12 +191,20 @@ struct LiveShieldPreviewView: View {
         }
     }
 
+    private var isNativeOSLockScreen: Bool {
+        editorController.draftLayout.backgroundType == .macosSequoia || editorController.draftLayout.backgroundType == .windows11
+    }
+
     @ViewBuilder
     private func backgroundLayer(size: CGSize) -> some View {
         let layout = editorController.draftLayout
         switch layout.backgroundType {
         case .solidColor:
             layout.backgroundColor
+        case .macosSequoia:
+            NativeMacOSLockScreenView(viewModel: ShieldViewModel())
+        case .windows11:
+            NativeWindows11LockScreenView(viewModel: ShieldViewModel())
         case .customImage:
             if let bgPath = layout.backgroundImagePath {
                 let isGIF = bgPath.lowercased().hasSuffix(".gif")

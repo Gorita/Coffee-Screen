@@ -255,9 +255,19 @@ struct FloatingControlPanelView: View {
                                     (name: "Pixel Dog", resourceName: "preset_pixel_dog"),
                                     (name: "Summer Horror", resourceName: "preset_creepy_horror")
                                 ], id: \.resourceName) { preset in
+                                    let isSelected = (preset.resourceName == "preset_macos_sequoia" && editorController.draftLayout.backgroundType == .macosSequoia) ||
+                                                     (preset.resourceName == "preset_windows_11" && editorController.draftLayout.backgroundType == .windows11) ||
+                                                     (editorController.draftLayout.backgroundType == .customImage && editorController.draftLayout.backgroundImagePath?.contains(preset.resourceName) == true)
+
                                     Button {
                                         print("[DEBUG][LockScreenEditorView] Recommended preset clicked: \(preset.name)")
-                                        if let savedPath = settingsManager.importPresetGIFToSandbox(named: preset.resourceName) {
+                                        if preset.resourceName == "preset_macos_sequoia" {
+                                            editorController.draftLayout.backgroundType = .macosSequoia
+                                            editorController.draftLayout.backgroundImagePath = nil
+                                        } else if preset.resourceName == "preset_windows_11" {
+                                            editorController.draftLayout.backgroundType = .windows11
+                                            editorController.draftLayout.backgroundImagePath = nil
+                                        } else if let savedPath = settingsManager.importPresetGIFToSandbox(named: preset.resourceName) {
                                             print("[DEBUG][LockScreenEditorView] Draft GIF background path: \(savedPath)")
                                             editorController.draftLayout.backgroundImagePath = savedPath
                                             editorController.draftLayout.backgroundType = .customImage
@@ -273,7 +283,7 @@ struct FloatingControlPanelView: View {
                                                     .clipShape(RoundedRectangle(cornerRadius: 6))
                                                     .overlay(
                                                         RoundedRectangle(cornerRadius: 6)
-                                                            .strokeBorder(editorController.draftLayout.backgroundImagePath?.contains(preset.resourceName) == true ? Color.yellow : Color.white.opacity(0.3), lineWidth: editorController.draftLayout.backgroundImagePath?.contains(preset.resourceName) == true ? 2 : 1)
+                                                            .strokeBorder(isSelected ? Color.yellow : Color.white.opacity(0.3), lineWidth: isSelected ? 2 : 1)
                                                     )
                                             } else {
                                                 Rectangle()
@@ -283,7 +293,7 @@ struct FloatingControlPanelView: View {
                                             }
                                             Text(preset.name)
                                                 .font(.system(size: 8))
-                                                .foregroundStyle(editorController.draftLayout.backgroundImagePath?.contains(preset.resourceName) == true ? Color.coffeeBrown : Color.gray)
+                                                .foregroundStyle(isSelected ? Color.coffeeBrown : Color.gray)
                                         }
                                     }
                                     .buttonStyle(.plain)
