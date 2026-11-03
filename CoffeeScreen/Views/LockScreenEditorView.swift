@@ -247,6 +247,8 @@ struct FloatingControlPanelView: View {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
                                 ForEach([
+                                    (name: "macOS Sequoia", resourceName: "preset_macos_sequoia"),
+                                    (name: "Windows 11", resourceName: "preset_windows_11"),
                                     (name: "Dev Terminal", resourceName: "preset_dev_terminal"),
                                     (name: "Ghostty ASCII", resourceName: "preset_ghostty_ascii"),
                                     (name: "Interactive Typing", resourceName: "preset_dev_typing"),
