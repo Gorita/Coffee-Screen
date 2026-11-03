@@ -18,6 +18,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     /// 잠금/해제 콜백
     var onLockToggle: (() -> Void)?
 
+    /// 앱(메인 윈도우) 열기 콜백
+    var onOpenApp: (() -> Void)?
+
     /// PIN 설정 콜백
     var onOpenPINSettings: (() -> Void)?
 
@@ -253,6 +256,18 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         // 현재 PIN 상태 직접 확인
         let currentPINSet = PINManager.shared.isPINSet
 
+        // Coffee-Screen 앱 열기 (잠금 해제 상태에서만)
+        if !isLocked {
+            let openItem = NSMenuItem(
+                title: String(localized: "menu.openApp", defaultValue: "Coffee-Screen 열기"),
+                action: #selector(openApp),
+                keyEquivalent: "o"
+            )
+            openItem.target = self
+            menu.addItem(openItem)
+            menu.addItem(NSMenuItem.separator())
+        }
+
         // About 메뉴 (항상 표시)
         let aboutItem = NSMenuItem(
             title: String(localized: "menu.about"),
@@ -454,6 +469,10 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     @objc private func toggleLock() {
         onLockToggle?()
+    }
+
+    @objc private func openApp() {
+        onOpenApp?()
     }
 
     @objc private func checkForUpdates() {

@@ -225,6 +225,16 @@ final class MainViewModel: ObservableObject {
             }
         }
 
+        statusBarController.onOpenApp = {
+            NSApp.activate(ignoringOtherApps: true)
+
+            // 메인 윈도우 찾아서 표시
+            for window in NSApp.windows where !(window is ShieldWindow) && !(window is NSPanel) {
+                window.makeKeyAndOrderFront(nil)
+                return
+            }
+        }
+
         statusBarController.onOpenPINSettings = {
             NSApp.activate(ignoringOtherApps: true)
 
