@@ -55,12 +55,16 @@ struct ShieldView: View {
     // MARK: - 제휴 쉐어링크 글래스 바 레이어
 
     private var adGlassBarLayer: some View {
-        VStack {
-            Spacer()
-            ShieldAdGlassBarView()
-                .padding(.bottom, 24)
+        Group {
+            if AffiliateAdManager.shared.currentAd != nil {
+                VStack {
+                    Spacer()
+                    ShieldAdGlassBarView()
+                        .padding(.bottom, 24)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
     }
 
     // MARK: - Background Subviews

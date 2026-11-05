@@ -32,8 +32,8 @@ final class AffiliateAdManager: ObservableObject {
     )
 
     private init() {
-        self.currentAd = Self.defaultItem
-        self.feedItems = [Self.defaultItem]
+        self.currentAd = nil
+        self.feedItems = []
         loadInitialFeed()
         fetchRemoteFeed()
     }
@@ -62,8 +62,13 @@ final class AffiliateAdManager: ObservableObject {
             guard let self = self, let data = data, error == nil else { return }
             do {
                 let feed = try JSONDecoder().decode(AffiliateAdFeed.self, from: data)
-                if !feed.items.isEmpty {
-                    DispatchQueue.main.async {
+                DispatchQueue.main.async {
+                    if feed.items.isEmpty {
+                        // 원격에서 items가 빈 배열이면 광고를 즉시 끕니다.
+                        self.feedItems = []
+                        self.currentAd = nil
+                        self.rotationTimer?.cancel()
+                    } else {
                         self.feedItems = feed.items
                         if self.currentAd == nil || !feed.items.contains(where: { $0.id == self.currentAd?.id }) {
                             self.currentAd = feed.items.first

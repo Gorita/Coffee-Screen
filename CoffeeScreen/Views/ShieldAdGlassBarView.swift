@@ -9,11 +9,10 @@ struct ShieldAdGlassBarView: View {
     @State private var delayWorkItem: DispatchWorkItem?
 
     var body: some View {
-        let item = adManager.currentAd ?? AffiliateAdManager.defaultItem
-
-        VStack(spacing: 8) {
-            // 1. 메인 리퀴드 글래스모피즘 바 (Apple 공식 표준 Material API)
-            HStack(spacing: 16) {
+        if let item = adManager.currentAd {
+            VStack(spacing: 8) {
+                // 1. 메인 리퀴드 글래스모피즘 바 (Apple 공식 표준 Material API)
+                HStack(spacing: 16) {
                 // 상품 썸네일 (60x60 둥근 사각형)
                 thumbnailView(for: item)
                     .frame(width: 60, height: 60)
@@ -96,6 +95,7 @@ struct ShieldAdGlassBarView: View {
         }
         .onDisappear {
             cancelAppearance()
+        }
         }
     }
 

@@ -96,14 +96,28 @@ struct NativeMacOSLockScreenView: View {
                     .shadow(color: .black.opacity(0.25), radius: 12, x: 0, y: 4)
                     .offset(x: shakeOffset)
 
-                    // 힌트 텍스트
+                    // 힌트 텍스트 & Touch ID 버튼
                     if let error = viewModel.authError {
                         Text(error)
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(Color(red: 1.0, green: 0.45, blue: 0.45))
                             .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 1)
+                    } else if viewModel.isBiometricAvailable {
+                        Button(action: {
+                            viewModel.attemptTouchID()
+                        }) {
+                            HStack(spacing: 5) {
+                                Image(systemName: "touchid")
+                                    .font(.system(size: 12))
+                                Text("Touch ID 또는 암호 입력")
+                                    .font(.system(size: 11, weight: .regular))
+                            }
+                            .foregroundStyle(Color.white.opacity(0.85))
+                            .shadow(color: .black.opacity(0.4), radius: 6, x: 0, y: 1)
+                        }
+                        .buttonStyle(.plain)
                     } else {
-                        Text("Touch ID 또는 암호 입력")
+                        Text("암호 입력")
                             .font(.system(size: 11, weight: .regular))
                             .foregroundStyle(Color.white.opacity(0.72))
                             .shadow(color: .black.opacity(0.4), radius: 6, x: 0, y: 1)
@@ -116,6 +130,11 @@ struct NativeMacOSLockScreenView: View {
             NSApp.activate(ignoringOtherApps: true)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 isFieldFocused = true
+            }
+            if viewModel.isBiometricAvailable {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    viewModel.attemptTouchID()
+                }
             }
         }
         .onReceive(timer) { input in
