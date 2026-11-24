@@ -202,9 +202,9 @@ struct LiveShieldPreviewView: View {
         case .solidColor:
             layout.backgroundColor
         case .macosSequoia:
-            NativeMacOSLockScreenView(viewModel: ShieldViewModel())
+            NativeMacOSLockScreenView(viewModel: ShieldViewModel(), isPreview: true)
         case .windows11:
-            NativeWindows11LockScreenView(viewModel: ShieldViewModel())
+            NativeWindows11LockScreenView(viewModel: ShieldViewModel(), isPreview: true)
         case .customImage:
             if let bgPath = layout.backgroundImagePath {
                 let isGIF = bgPath.lowercased().hasSuffix(".gif")

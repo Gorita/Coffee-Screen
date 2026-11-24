@@ -4,6 +4,7 @@ import SwiftUI
 /// 5K 레티나 무손실 칼선명도 + 실제 현재 시각 연동 + 네이티브 인증 기능 내장
 struct NativeMacOSLockScreenView: View {
     @ObservedObject var viewModel: ShieldViewModel
+    var isPreview: Bool = false
 
     @State private var currentTime = Date()
     @FocusState private var isFieldFocused: Bool
@@ -104,40 +105,40 @@ struct NativeMacOSLockScreenView: View {
                             .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 1)
                     }
 
-                    // 힌트 텍스트 & Touch ID 버튼
+                    // Touch ID 버튼 (클릭 시에만 생체인증 실행)
                     if viewModel.isBiometricAvailable {
                         Button(action: {
+                            guard !isPreview else { return }
                             viewModel.attemptTouchID()
                         }) {
-                            HStack(spacing: 5) {
+                            HStack(spacing: 6) {
                                 Image(systemName: "touchid")
                                     .font(.system(size: 12))
-                                Text("Touch ID 또는 암호 입력")
-                                    .font(.system(size: 11, weight: .regular))
+                                Text("Touch ID로 잠금 해제")
+                                    .font(.system(size: 11, weight: .medium))
                             }
-                            .foregroundStyle(Color.white.opacity(0.85))
-                            .shadow(color: .black.opacity(0.4), radius: 6, x: 0, y: 1)
+                            .foregroundStyle(Color.white.opacity(0.92))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.white.opacity(0.12), in: Capsule())
+                            .overlay(
+                                Capsule()
+                                    .strokeBorder(Color.white.opacity(0.22), lineWidth: 0.5)
+                            )
+                            .shadow(color: .black.opacity(0.35), radius: 6, x: 0, y: 2)
                         }
                         .buttonStyle(.plain)
-                    } else if viewModel.authError == nil {
-                        Text("암호 입력")
-                            .font(.system(size: 11, weight: .regular))
-                            .foregroundStyle(Color.white.opacity(0.72))
-                            .shadow(color: .black.opacity(0.4), radius: 6, x: 0, y: 1)
+                        .disabled(isPreview)
                     }
                 }
                 .padding(.bottom, 150)
             }
         }
         .onAppear {
+            guard !isPreview else { return }
             NSApp.activate(ignoringOtherApps: true)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 isFieldFocused = true
-            }
-            if viewModel.isBiometricAvailable {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    viewModel.attemptTouchID()
-                }
             }
         }
         .onReceive(timer) { input in

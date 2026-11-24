@@ -20,6 +20,7 @@ struct ShieldAdGlassBarView: View {
                     if item.hasMedia {
                         RemoteBannerMediaView(item: item)
                             .frame(width: 60, height: 60)
+                            .clipped()
                     }
 
                     // 중앙 텍스트 정보 영역 (Apple HIG Semantic Vibrancy 계층 적용)

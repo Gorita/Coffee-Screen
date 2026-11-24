@@ -4,6 +4,7 @@ import SwiftUI
 /// 5K 레티나 무손실 칼선명도 + 실제 현재 시각 연동 + 윈도우 11 Fluent Design 인풋 내장
 struct NativeWindows11LockScreenView: View {
     @ObservedObject var viewModel: ShieldViewModel
+    var isPreview: Bool = false
 
     @State private var currentTime = Date()
     @FocusState private var isFieldFocused: Bool
@@ -110,6 +111,7 @@ struct NativeWindows11LockScreenView: View {
 
                     if viewModel.isBiometricAvailable {
                         Button(action: {
+                            guard !isPreview else { return }
                             viewModel.attemptTouchID()
                         }) {
                             HStack(spacing: 6) {
@@ -122,6 +124,7 @@ struct NativeWindows11LockScreenView: View {
                             .padding(.top, 4)
                         }
                         .buttonStyle(.plain)
+                        .disabled(isPreview)
                     }
                 }
                 .padding(.bottom, 160)
@@ -144,14 +147,10 @@ struct NativeWindows11LockScreenView: View {
             }
         }
         .onAppear {
+            guard !isPreview else { return }
             NSApp.activate(ignoringOtherApps: true)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 isFieldFocused = true
-            }
-            if viewModel.isBiometricAvailable {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    viewModel.attemptTouchID()
-                }
             }
         }
         .onReceive(timer) { input in

@@ -11,6 +11,7 @@ struct RemoteBannerMediaView: View {
             switch item.mediaFormat {
             case .lottie:
                 RemoteLottieView(url: url, loopMode: .loop)
+                    .clipped()
             case .gif:
                 RemoteAnimatedGIFView(url: url)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -88,6 +89,44 @@ struct RemoteBannerMediaView: View {
     }
 }
 
+/// Lottie intrinsicContentSize(240x240 등)가 SwiftUI 프레임을 덮어쓰지 않도록 격리하는 컨테이너 뷰
+final class LottieContainerNSView: NSView {
+    let animationView = LottieAnimationView(configuration: LottieConfiguration(renderingEngine: .mainThread))
+
+    override var isFlipped: Bool { true }
+
+    override var intrinsicContentSize: NSSize {
+        NSSize(width: NSView.noIntrinsicMetric, height: NSView.noIntrinsicMetric)
+    }
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        wantsLayer = true
+        layer?.masksToBounds = true
+
+        animationView.contentMode = .scaleAspectFit
+        animationView.backgroundBehavior = .pauseAndRestore
+        animationView.autoresizingMask = [.width, .height]
+        animationView.frame = bounds
+        animationView.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        animationView.setContentHuggingPriority(.defaultLow, for: .vertical)
+        animationView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        animationView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
+        addSubview(animationView)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layout() {
+        super.layout()
+        animationView.frame = bounds
+        animationView.needsLayout = true
+        animationView.layoutSubtreeIfNeeded()
+    }
+}
+
 /// 원격 및 로컬 Lottie(.json / .lottie) 애니메이션 뷰
 struct RemoteLottieView: NSViewRepresentable {
     let url: URL
@@ -96,7 +135,7 @@ struct RemoteLottieView: NSViewRepresentable {
     final class Coordinator {
         var loadedURL: URL?
         var task: URLSessionDataTask?
-        weak var animationView: LottieAnimationView?
+        weak var containerView: LottieContainerNSView?
 
         deinit {
             task?.cancel()
@@ -107,30 +146,21 @@ struct RemoteLottieView: NSViewRepresentable {
         Coordinator()
     }
 
-    func makeNSView(context: Context) -> NSView {
-        let container = NSView(frame: .zero)
-        let animationView = LottieAnimationView()
-        animationView.contentMode = .scaleAspectFit
-        animationView.loopMode = loopMode
-        animationView.backgroundBehavior = .pauseAndRestore
-        animationView.translatesAutoresizingMaskIntoConstraints = false
-
-        container.addSubview(animationView)
-        NSLayoutConstraint.activate([
-            animationView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            animationView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            animationView.topAnchor.constraint(equalTo: container.topAnchor),
-            animationView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-        ])
-
-        context.coordinator.animationView = animationView
+    func makeNSView(context: Context) -> LottieContainerNSView {
+        let container = LottieContainerNSView(frame: .zero)
+        container.animationView.loopMode = loopMode
+        context.coordinator.containerView = container
         loadIfNeeded(coordinator: context.coordinator)
         return container
     }
 
-    func updateNSView(_ nsView: NSView, context: Context) {
-        context.coordinator.animationView?.loopMode = loopMode
+    func updateNSView(_ nsView: LottieContainerNSView, context: Context) {
+        nsView.animationView.loopMode = loopMode
         loadIfNeeded(coordinator: context.coordinator)
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, nsView: LottieContainerNSView, context: Context) -> CGSize? {
+        proposal.replacingUnspecifiedDimensions(by: CGSize(width: 60, height: 60))
     }
 
     private func loadIfNeeded(coordinator: Coordinator) {
@@ -168,20 +198,25 @@ struct RemoteLottieView: NSViewRepresentable {
                 if case .success(let dotLottie) = result {
                     DispatchQueue.main.async {
                         guard coordinator.loadedURL == targetURL,
-                              let animView = coordinator.animationView else { return }
-                        animView.loadAnimation(from: dotLottie)
-                        animView.loopMode = loopMode
-                        animView.play()
+                              let container = coordinator.containerView else { return }
+                        container.animationView.loadAnimation(from: dotLottie)
+                        container.animationView.loopMode = loopMode
+                        container.needsLayout = true
+                        container.layoutSubtreeIfNeeded()
+                        container.animationView.play()
                     }
                 }
             }
         } else if let animation = try? JSONDecoder().decode(LottieAnimation.self, from: data) {
             DispatchQueue.main.async {
                 guard coordinator.loadedURL == targetURL,
-                      let animView = coordinator.animationView else { return }
-                animView.animation = animation
-                animView.loopMode = loopMode
-                animView.play()
+                      let container = coordinator.containerView else { return }
+                container.animationView.animation = animation
+                container.animationView.loopMode = loopMode
+                container.needsLayout = true
+                container.layoutSubtreeIfNeeded()
+                container.animationView.forceDisplayUpdate()
+                container.animationView.play()
             }
         }
     }
