@@ -1,0 +1,93 @@
+name: Release Coffee-Screen
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.2.9). Defaults to v<MARKETING_VERSION> in project.yml'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Resolve version and tag
+        id: meta
+        run: |
+          VERSION=$(grep -E '^[[:space:]]+MARKETING_VERSION:' project.yml | sed -E 's/.*"([^"]+)".*/\1/' | head -n 1)
+          if [ -z "$VERSION" ]; then
+            echo "Error: Could not read MARKETING_VERSION from project.yml" >&2
+            exit 1
+          fi
+
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TAG="${GITHUB_REF_NAME}"
+            if [ "$TAG" != "v${VERSION}" ]; then
+              echo "Error: Tag ($TAG) does not match MARKETING_VERSION (v${VERSION}) in project.yml" >&2
+              exit 1
+            fi
+          else
+            TAG="${{ inputs.tag }}"
+            if [ -z "$TAG" ]; then
+              TAG="v${VERSION}"
+            fi
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Build unsigned Release app and DMG
+        run: |
+          ./scripts/build.sh
+          ./scripts/create-dmg.sh
+
+      - name: Download previous appcast.xml for history
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download --pattern appcast.xml --output build/appcast.xml --clobber || true
+
+      - name: Sign appcast.xml with Sparkle EdDSA key
+        env:
+          SPARKLE_EDDSA_PRIVATE_KEY: ${{ secrets.SPARKLE_EDDSA_PRIVATE_KEY }}
+        run: |
+          if [ -z "$SPARKLE_EDDSA_PRIVATE_KEY" ]; then
+            echo "Error: SPARKLE_EDDSA_PRIVATE_KEY secret is not set" >&2
+            exit 1
+          fi
+          SPARKLE_BIN=$(find build/DerivedData -path "*/SourcePackages/artifacts/sparkle/Sparkle/bin/generate_appcast" | head -n 1)
+          if [ -z "$SPARKLE_BIN" ]; then
+            echo "Error: generate_appcast binary not found in build/DerivedData" >&2
+            exit 1
+          fi
+          printf '%s' "$SPARKLE_EDDSA_PRIVATE_KEY" | "$SPARKLE_BIN" \
+            --ed-key-file - \
+            --download-url-prefix "https://github.com/${{ github.repository }}/releases/download/${{ steps.meta.outputs.tag }}/" \
+            build/
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.meta.outputs.tag }}"
+          DMG="build/Coffee-Screen-${{ steps.meta.outputs.version }}.dmg"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Error: Release $TAG already exists" >&2
+            exit 1
+          fi
+          gh release create "$TAG" "$DMG" build/appcast.xml \
+            --title "$TAG" \
+            --generate-notes
