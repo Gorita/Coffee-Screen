@@ -7,6 +7,7 @@ struct ShieldView: View {
 
     @ObservedObject private var settingsManager = LockScreenSettingsManager.shared
     @ObservedObject private var bulletinServer = BulletinSocketServer.shared
+    @ObservedObject private var adManager = AffiliateAdManager.shared
 
     @State private var currentTime = Date()
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -56,7 +57,7 @@ struct ShieldView: View {
 
     private var adGlassBarLayer: some View {
         Group {
-            if AffiliateAdManager.shared.currentAd != nil {
+            if adManager.currentAd != nil {
                 VStack {
                     Spacer()
                     ShieldAdGlassBarView()

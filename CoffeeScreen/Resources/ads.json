@@ -1,16 +1,5 @@
 {
   "version": 1,
   "rotationIntervalSec": 60,
-  "items": [
-    {
-      "id": "toss-ocarina-01",
-      "tagline": "🎵 HOBBY & MUSIC",
-      "title": "삼익 오카리나 NSO-NA2 알토 C 다크블루",
-      "subtitle": "휴식 시간에 즐기는 맑은 음색 • 카메라로 QR 스캔",
-      "shareUrl": "https://toss.im/_m/Hb4eUkQu",
-      "qrUrl": "https://toss.im/_m/Hb4eUkQu",
-      "imageUrl": "https://shopping.toss.im/live/taca/ai/v2/Y2ZkMDhj/T1c1N0dSdlo4eG1aT2JPWmJKRkZsdHl4bzBsc1djM0pNakIyNUo0WU9YTT0.png",
-      "disclosure": "✱ 토스쇼핑 쉐어링크 파트너스 활동의 일환으로 수수료를 제공받을 수 있습니다."
-    }
-  ]
+  "items": []
 }

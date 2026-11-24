@@ -10,6 +10,9 @@ packages:
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle
     from: 2.0.0
+  Lottie:
+    url: https://github.com/airbnb/lottie-ios.git
+    from: "4.5.0"
 
 settings:
   base:
@@ -37,6 +40,7 @@ targets:
           - "**/.DS_Store"
     dependencies:
       - package: Sparkle
+      - package: Lottie
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.gorita.coffee-screen
@@ -79,6 +83,7 @@ targets:
           - "**/.DS_Store"
     dependencies:
       - target: CoffeeScreen
+      - package: Lottie
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.gorita.coffee-screen-tests

@@ -96,13 +96,16 @@ struct NativeMacOSLockScreenView: View {
                     .shadow(color: .black.opacity(0.25), radius: 12, x: 0, y: 4)
                     .offset(x: shakeOffset)
 
-                    // 힌트 텍스트 & Touch ID 버튼
+                    // 에러 메시지
                     if let error = viewModel.authError {
                         Text(error)
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(Color(red: 1.0, green: 0.45, blue: 0.45))
                             .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 1)
-                    } else if viewModel.isBiometricAvailable {
+                    }
+
+                    // 힌트 텍스트 & Touch ID 버튼
+                    if viewModel.isBiometricAvailable {
                         Button(action: {
                             viewModel.attemptTouchID()
                         }) {
@@ -116,7 +119,7 @@ struct NativeMacOSLockScreenView: View {
                             .shadow(color: .black.opacity(0.4), radius: 6, x: 0, y: 1)
                         }
                         .buttonStyle(.plain)
-                    } else {
+                    } else if viewModel.authError == nil {
                         Text("암호 입력")
                             .font(.system(size: 11, weight: .regular))
                             .foregroundStyle(Color.white.opacity(0.72))

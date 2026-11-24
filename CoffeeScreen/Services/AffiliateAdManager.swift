@@ -19,18 +19,6 @@ final class AffiliateAdManager: ObservableObject {
     // 원격 ads.json CDN 주소
     private let remoteFeedURL = URL(string: "https://raw.githubusercontent.com/Gorita/Coffee-Screen/main/ads.json")
 
-    // 기본 추천 아이템 (네트워크/번들 로딩 전 항상 즉시 표시)
-    static let defaultItem = AffiliateAdItem(
-        id: "toss-ocarina-01",
-        tagline: "🎵 HOBBY & MUSIC",
-        title: "삼익 오카리나 NSO-NA2 알토 C 다크블루",
-        subtitle: "휴식 시간에 즐기는 맑은 음색 • 카메라로 QR 스캔",
-        shareUrl: "https://toss.im/_m/Hb4eUkQu",
-        qrUrl: "https://toss.im/_m/Hb4eUkQu",
-        imageUrl: "https://shopping.toss.im/live/taca/ai/v2/Y2ZkMDhj/T1c1N0dSdlo4eG1aT2JPWmJKRkZsdHl4bzBsc1djM0pNakIyNUo0WU9YTT0.png",
-        disclosure: "✱ 토스쇼핑 쉐어링크 파트너스 활동의 일환으로 수수료를 제공받을 수 있습니다."
-    )
-
     private init() {
         self.currentAd = nil
         self.feedItems = []
@@ -42,11 +30,13 @@ final class AffiliateAdManager: ObservableObject {
     private func loadInitialFeed() {
         if let bundleURL = Bundle.main.url(forResource: "ads", withExtension: "json"),
            let data = try? Data(contentsOf: bundleURL),
-           let feed = try? JSONDecoder().decode(AffiliateAdFeed.self, from: data),
-           !feed.items.isEmpty {
-            self.feedItems = feed.items
-            self.currentAd = feed.items.first
-            startRotationTimer(interval: feed.rotationIntervalSec ?? 60)
+           let feed = try? JSONDecoder().decode(AffiliateAdFeed.self, from: data) {
+            let validItems = feed.items.filter { $0.hasAnyContent }
+            if !validItems.isEmpty {
+                self.feedItems = validItems
+                self.currentAd = validItems.first
+                startRotationTimer(interval: feed.rotationIntervalSec ?? 60)
+            }
         }
     }
 
@@ -62,16 +52,17 @@ final class AffiliateAdManager: ObservableObject {
             guard let self = self, let data = data, error == nil else { return }
             do {
                 let feed = try JSONDecoder().decode(AffiliateAdFeed.self, from: data)
+                let validItems = feed.items.filter { $0.hasAnyContent }
                 DispatchQueue.main.async {
-                    if feed.items.isEmpty {
-                        // 원격에서 items가 빈 배열이면 광고를 즉시 끕니다.
+                    if validItems.isEmpty {
+                        // 원격에서 유효한 items가 비어 있으면 하단 카드를 즉시 끕니다.
                         self.feedItems = []
                         self.currentAd = nil
                         self.rotationTimer?.cancel()
                     } else {
-                        self.feedItems = feed.items
-                        if self.currentAd == nil || !feed.items.contains(where: { $0.id == self.currentAd?.id }) {
-                            self.currentAd = feed.items.first
+                        self.feedItems = validItems
+                        if self.currentAd == nil || !validItems.contains(where: { $0.id == self.currentAd?.id }) {
+                            self.currentAd = validItems.first
                         }
                         self.startRotationTimer(interval: feed.rotationIntervalSec ?? 60)
                     }

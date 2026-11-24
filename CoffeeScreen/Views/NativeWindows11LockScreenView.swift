@@ -106,7 +106,9 @@ struct NativeWindows11LockScreenView: View {
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(Color(red: 1.0, green: 0.45, blue: 0.45))
                             .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 1)
-                    } else if viewModel.isBiometricAvailable {
+                    }
+
+                    if viewModel.isBiometricAvailable {
                         Button(action: {
                             viewModel.attemptTouchID()
                         }) {

@@ -5,32 +5,33 @@ import Carbon.HIToolbox
 final class LockHotkeyManagerTests: XCTestCase {
 
     private let testKey = "com.gorita.coffee-screen.lockHotkey"
+    private let useSameKey = "com.gorita.coffee-screen.useSameHotkeyForLock"
+
+    override func setUpWithError() throws {
+        UserDefaults.standard.removeObject(forKey: testKey)
+        UserDefaults.standard.removeObject(forKey: useSameKey)
+    }
 
     override func tearDownWithError() throws {
         UserDefaults.standard.removeObject(forKey: testKey)
+        UserDefaults.standard.removeObject(forKey: useSameKey)
     }
 
     // MARK: - Default
 
-    func testDefault_IsCmdCtrlL() {
-        let defaultCombination = LockHotkeyManager.defaultCombination
-
-        XCTAssertEqual(defaultCombination.keyCode, UInt16(kVK_ANSI_L))
-        XCTAssertEqual(defaultCombination.keyCharacter, "L")
-        XCTAssertTrue(defaultCombination.modifierFlags.contains(.command))
-        XCTAssertTrue(defaultCombination.modifierFlags.contains(.control))
-        XCTAssertFalse(defaultCombination.requiresBothShifts)
+    func testDefault_WhenNoCustomAndNotSameHotkey_ReturnsNil() {
+        XCTAssertNil(LockHotkeyManager.shared.currentHotkey)
     }
 
     // MARK: - Current Hotkey Tests
 
-    func testCurrentHotkey_WhenNoCustomSet_ReturnsDefault() {
+    func testCurrentHotkey_WhenNoCustomSet_ReturnsNil() {
         UserDefaults.standard.removeObject(forKey: testKey)
 
         let manager = LockHotkeyManager.shared
         let current = manager.currentHotkey
 
-        XCTAssertEqual(current, LockHotkeyManager.defaultCombination)
+        XCTAssertNil(current)
     }
 
     func testCurrentHotkey_WhenCustomSet_ReturnsCustom() {
@@ -110,7 +111,7 @@ final class LockHotkeyManagerTests: XCTestCase {
         manager.setHotkey(custom)
         manager.resetToDefault()
 
-        XCTAssertEqual(manager.currentHotkey, LockHotkeyManager.defaultCombination)
+        XCTAssertNil(manager.currentHotkey)
     }
 
     // MARK: - Is Custom Hotkey Set Tests
